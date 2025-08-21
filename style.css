@@ -1,26 +1,19 @@
-:root {
-  --bg: #0b0b0f;
-  --panel: #111218;
-  --border: #ffffff;
-}
-
-* { box-sizing: border-box; }
-
-html, body {
-  height: 100%;
-  margin: 0;
-  background: radial-gradient(1200px 800px at 50% 40%, #141622 0%, var(--bg) 60%);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-}
-
 body {
-  display: grid;
-  place-items: center;
+    margin: 0;
+    background: #111;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: monospace;
+    color: white;
 }
 
-canvas {
-  border: 2px solid var(--border);
-  background: #1a1a1a;
-  image-rendering: pixelated;
-  box-shadow: 0 10px 40px rgba(0,0,0,.6), inset 0 0 30px rgba(255,255,255,.05);
+#announcement {
+    width: 100%;
+    text-align: center;
+    background: #222;
+    color: gold;
+    padding: 8px;
+    font-size: 18px;
+    border-bottom: 2px solid #444;
 }
