@@ -1,16 +1,26 @@
-body { 
-    margin: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background-color: #111;
-    font-family: 'Times New Roman', Times, serif;
-    color: white;
+:root {
+  --bg: #0b0b0f;
+  --panel: #111218;
+  --border: #ffffff;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  background: radial-gradient(1200px 800px at 50% 40%, #141622 0%, var(--bg) 60%);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+body {
+  display: grid;
+  place-items: center;
 }
 
 canvas {
-    background-color: #222;
-    border: 2px solid white;
+  border: 2px solid var(--border);
+  background: #1a1a1a;
+  image-rendering: pixelated;
+  box-shadow: 0 10px 40px rgba(0,0,0,.6), inset 0 0 30px rgba(255,255,255,.05);
 }
-
