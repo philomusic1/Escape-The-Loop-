@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Escape The Loop (Buggy Version)</title>
+  <title>Escape The Loop</title>
   <style>
     body { margin:0; background:black; color:white; text-align:center; }
-    canvas { background:#111; display:block; margin:20px auto; }
+    canvas { background:#111; display:block; margin:20px auto; border:3px solid white; }
   </style>
 </head>
 <body>
@@ -39,6 +39,7 @@ document.addEventListener("keyup", e=>{ delete keysDown[e.key]; });
 
 // --- Levels --- //
 let levels = [
+  // Level 1
   {
     maze:[
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
@@ -57,33 +58,159 @@ let levels = [
       [1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
     ],
-    enemies:[{x:5,y:5,floatX:5,floatY:5,speed:0.02}],
+    enemies:[{x:5,y:5,floatX:5,floatY:5,speed:0.03}],
     keys:[{x:13,y:1}],
     diamonds:[{x:13,y:13}],
+    portal:{x:14,y:13,pulse:1}
+  },
+  // Level 2
+  {
+    maze:[
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+      [1,0,1,1,1,0,1,0,1,1,1,1,1,1,0,1],
+      [1,0,0,0,1,0,0,0,1,0,0,0,0,1,0,1],
+      [1,1,1,0,1,1,1,0,1,0,1,1,0,1,0,1],
+      [1,0,0,0,0,0,0,0,1,0,1,0,0,1,0,1],
+      [1,0,1,1,1,1,1,0,1,0,1,0,1,1,0,1],
+      [1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,1],
+      [1,1,1,1,1,0,1,1,1,0,1,1,1,1,1,1],
+      [1,0,0,0,1,0,0,0,1,0,0,0,0,0,0,1],
+      [1,0,1,0,1,1,1,0,1,1,1,1,1,1,0,1],
+      [1,0,1,0,0,0,0,0,0,0,0,0,0,1,0,1],
+      [1,0,1,1,1,1,1,1,1,1,1,1,0,1,0,1],
+      [1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    ],
+    enemies:[
+      {x:5,y:5,floatX:5,floatY:5,speed:0.035},
+      {x:10,y:10,floatX:10,floatY:10,speed:0.035}
+    ],
+    keys:[{x:1,y:13},{x:13,y:1}],
+    diamonds:[{x:13,y:13}],
+    portal:{x:14,y:13,pulse:1}
+  },
+  // Level 3
+  {
+    maze:[
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+      [1,0,1,1,1,0,1,0,1,1,1,1,1,1,0,1],
+      [1,0,0,0,1,0,0,0,1,0,0,0,0,1,0,1],
+      [1,1,1,0,1,1,1,0,1,0,1,1,0,1,0,1],
+      [1,0,0,0,0,0,0,0,1,0,1,0,0,1,0,1],
+      [1,0,1,1,1,1,1,0,1,0,1,0,1,1,0,1],
+      [1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,1],
+      [1,1,1,1,1,0,1,1,1,0,1,1,1,1,1,1],
+      [1,0,0,0,1,0,0,0,1,0,0,0,0,0,0,1],
+      [1,0,1,0,1,1,1,0,1,1,1,1,1,1,0,1],
+      [1,0,1,0,0,0,0,0,0,0,0,0,0,1,0,1],
+      [1,0,1,1,1,1,1,1,1,1,1,1,0,1,0,1],
+      [1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    ],
+    enemies:[
+      {x:5,y:5,floatX:5,floatY:5,speed:0.04},
+      {x:10,y:10,floatX:10,floatY:10,speed:0.04},
+      {x:7,y:8,floatX:7,floatY:8,speed:0.04}
+    ],
+    keys:[{x:1,y:13},{x:13,y:1}],
+    diamonds:[{x:13,y:13},{x:1,y:1}],
+    portal:{x:14,y:13,pulse:1}
+  },
+  // Level 4
+  {
+    maze:[
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+      [1,0,1,1,1,0,1,0,1,1,1,1,1,1,0,1],
+      [1,0,0,0,1,0,0,0,1,0,0,0,0,1,0,1],
+      [1,1,1,0,1,1,1,0,1,0,1,1,0,1,0,1],
+      [1,0,0,0,0,0,0,0,1,0,1,0,0,1,0,1],
+      [1,0,1,1,1,1,1,0,1,0,1,0,1,1,0,1],
+      [1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,1],
+      [1,1,1,1,1,0,1,1,1,0,1,1,1,1,1,1],
+      [1,0,0,0,1,0,0,0,1,0,0,0,0,0,0,1],
+      [1,0,1,0,1,1,1,0,1,1,1,1,1,1,0,1],
+      [1,0,1,0,0,0,0,0,0,0,0,0,0,1,0,1],
+      [1,0,1,1,1,1,1,1,1,1,1,1,0,1,0,1],
+      [1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    ],
+    enemies:[
+      {x:5,y:5,floatX:5,floatY:5,speed:0.045},
+      {x:10,y:10,floatX:10,floatY:10,speed:0.045},
+      {x:7,y:8,floatX:7,floatY:8,speed:0.045},
+      {x:3,y:12,floatX:3,floatY:12,speed:0.045}
+    ],
+    keys:[{x:1,y:13},{x:13,y:1},{x:8,y:7}],
+    diamonds:[{x:13,y:13},{x:1,y:1}],
+    portal:{x:14,y:13,pulse:1}
+  },
+  // Level 5
+  {
+    maze:[
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+      [1,0,1,1,1,0,1,0,1,1,1,1,1,1,0,1],
+      [1,0,0,0,1,0,0,0,1,0,0,0,0,1,0,1],
+      [1,1,1,0,1,1,1,0,1,0,1,1,0,1,0,1],
+      [1,0,0,0,0,0,0,0,1,0,1,0,0,1,0,1],
+      [1,0,1,1,1,1,1,0,1,0,1,0,1,1,0,1],
+      [1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,1],
+      [1,1,1,1,1,0,1,1,1,0,1,1,1,1,1,1],
+      [1,0,0,0,1,0,0,0,1,0,0,0,0,0,0,1],
+      [1,0,1,0,1,1,1,0,1,1,1,1,1,1,0,1],
+      [1,0,1,0,0,0,0,0,0,0,0,0,0,1,0,1],
+      [1,0,1,1,1,1,1,1,1,1,1,1,0,1,0,1],
+      [1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    ],
+    enemies:[
+      {x:5,y:5,floatX:5,floatY:5,speed:0.05},
+      {x:10,y:10,floatX:10,floatY:10,speed:0.05},
+      {x:7,y:8,floatX:7,floatY:8,speed:0.05},
+      {x:3,y:12,floatX:3,floatY:12,speed:0.05},
+      {x:12,y:3,floatX:12,floatY:3,speed:0.05}
+    ],
+    keys:[{x:1,y:13},{x:13,y:1},{x:8,y:7}],
+    diamonds:[{x:13,y:13},{x:1,y:1},{x:8,y:5}],
     portal:{x:14,y:13,pulse:1}
   }
 ];
 
 // --- Functions --- //
+// Reset level
 function resetLevel(){
   let lvl = levels[currentLevel];
   player.x=1; player.y=1; player.floatX=1; player.floatY=1; player.angle=0; player.scale=1;
   keysCollected=0; gameOver=false; victory=false; transitioning=false; transitionProgress=0;
-  // BUG: enemies are NOT reset here
+  lvl.enemies.forEach(e=>{ e.floatX=e.x; e.floatY=e.y; });
   levelMessage = `Level ${currentLevel+1}: Collect keys & diamonds, reach the portal!`;
   messageTimer = 180;
 }
 
-function restartGame() {
+// Restart game
+function restartGame(){
   currentLevel = 0;
   score = 0;
   victory = false;
   gameStarted = false;
-  // BUG: gameOver and enemy positions are NOT reset here
-  // So when you restart, enemies remain where they were,
-  // and if player spawns on an enemy, death loop occurs
+  gameOver = false;
+  transitionProgress = 0;
+
+  player.x=1; player.y=1; player.floatX=1; player.floatY=1; player.angle=0; player.scale=1;
+
+  levels.forEach(level=>{
+    level.enemies.forEach(e=>{ e.floatX=e.x; e.floatY=e.y; });
+  });
+
+  keysCollected=0;
+  messageTimer=0;
+  levelMessage="";
 }
 
+// Player movement
 function movePlayer(){
   if(gameOver || !gameStarted || messageTimer>0 || victory || transitioning) return;
   let dx=0,dy=0;
@@ -101,6 +228,7 @@ function movePlayer(){
   lvl.diamonds = lvl.diamonds.filter(d=>{ if(d.x===player.x && d.y===player.y){ score+=500; return false;} return true; });
 }
 
+// Enemy movement
 function moveEnemiesSmooth(){
   let lvl = levels[currentLevel];
   lvl.enemies.forEach(e=>{
@@ -118,7 +246,9 @@ function moveEnemiesSmooth(){
   });
 }
 
+// Portal pull
 function portalPull(){
+  if(transitioning) return;
   let lvl = levels[currentLevel];
   let p = lvl.portal;
   let dx = (p.x+0.5) - player.floatX;
@@ -133,18 +263,42 @@ function portalPull(){
     player.angle += 0.2 + (2 - dist) * 0.2;
     player.scale = Math.max(0.2, dist / 2);
     p.pulse = 1 + (2 - dist) * 0.2;
-  } else { player.angle=0; player.scale=1; p.pulse=1; }
+    if(dist < 0.2 && lvl.keys.length === 0){ transitioning = true; transitionProgress = 0; }
+  } else { player.angle = 0; player.scale = 1; p.pulse = 1; }
 }
 
+// Handle transition
+function handleTransition(){
+  if(!transitioning) return;
+  transitionProgress += 0.03;
+  if(transitionProgress>=1){
+    transitioning = false;
+    currentLevel++;
+    if(currentLevel >= levels.length){
+      victory=true;
+      levelMessage="You escaped the loop!";
+      messageTimer=600;
+    } else {
+      resetLevel();
+    }
+  }
+}
+
+// Draw everything
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
   let maze = levels[currentLevel].maze;
   let lvl = levels[currentLevel];
 
-  // Maze
+  // Maze with border
   for(let y=0;y<maze.length;y++){
     for(let x=0;x<maze[y].length;x++){
-      if(maze[y][x]===1){ ctx.fillStyle="gray"; ctx.fillRect(x*tileSize,y*tileSize,tileSize,tileSize); }
+      if(maze[y][x]===1){
+        ctx.fillStyle="gray"; 
+        ctx.fillRect(x*tileSize,y*tileSize,tileSize,tileSize);
+        ctx.strokeStyle="white";
+        ctx.strokeRect(x*tileSize,y*tileSize,tileSize,tileSize);
+      }
     }
   }
 
@@ -164,17 +318,20 @@ function draw(){
     ctx.fill();
   });
 
-  // Portal
+  // Portal vortex
   let p = lvl.portal;
   ctx.save();
   let t = performance.now()/200;
   ctx.translate(p.x*tileSize+20, p.y*tileSize+20);
-  ctx.rotate(t*2);
-  ctx.scale(p.pulse, p.pulse);
-  ctx.fillStyle="magenta";
-  ctx.beginPath();
-  ctx.arc(0,0,15,0,Math.PI*2);
-  ctx.fill();
+  ctx.rotate(t*4);
+  ctx.scale(p.pulse,p.pulse);
+  ctx.strokeStyle="magenta";
+  ctx.lineWidth=3;
+  for(let i=0;i<5;i++){
+    ctx.beginPath();
+    ctx.arc(0,0,5+i*4,0,Math.PI*2*(0.8-i*0.12));
+    ctx.stroke();
+  }
   ctx.restore();
 
   // Enemies
@@ -185,7 +342,7 @@ function draw(){
   ctx.save();
   ctx.translate(player.floatX*tileSize+20, player.floatY*tileSize+20);
   ctx.rotate(player.angle);
-  ctx.scale(player.scale, player.scale);
+  ctx.scale(player.scale,player.scale);
   ctx.fillStyle="cyan";
   ctx.fillRect(-15,-15,30,30);
   ctx.restore();
@@ -195,6 +352,11 @@ function draw(){
   ctx.font="20px Arial";
   ctx.fillText(`Level: ${currentLevel+1}  Keys: ${keysCollected}  Score: ${score}`,10,20);
 
+  if(messageTimer>0){
+    ctx.fillText(levelMessage, canvas.width/2 - ctx.measureText(levelMessage).width/2, canvas.height/2);
+    messageTimer--;
+  }
+
   if(!gameStarted){
     let msg = "Press ENTER to start";
     ctx.fillText(msg, canvas.width/2 - ctx.measureText(msg).width/2, canvas.height/2);
@@ -203,13 +365,19 @@ function draw(){
   if(gameOver){
     ctx.fillText("Game Over! Press R to restart", canvas.width/2 - ctx.measureText("Game Over! Press R to restart").width/2, canvas.height/2+30);
   }
+
+  if(victory){
+    ctx.fillText("Victory! You escaped the loop!", canvas.width/2 - ctx.measureText("Victory! You escaped the loop!").width/2, canvas.height/2+30);
+  }
 }
 
+// Game loop
 function loop(){
   if(gameStarted && !gameOver && !victory){
     movePlayer();
     moveEnemiesSmooth();
     portalPull();
+    handleTransition();
   }
   draw();
   requestAnimationFrame(loop);
