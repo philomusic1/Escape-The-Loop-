@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Escape The Loop</title>
+  <title>Escape The Loop (Buggy Version)</title>
   <style>
     body { margin:0; background:black; color:white; text-align:center; }
     canvas { background:#111; display:block; margin:20px auto; }
@@ -62,7 +62,6 @@ let levels = [
     diamonds:[{x:13,y:13}],
     portal:{x:14,y:13,pulse:1}
   }
-  // You can add more levels here with the same structure
 ];
 
 // --- Functions --- //
@@ -70,12 +69,20 @@ function resetLevel(){
   let lvl = levels[currentLevel];
   player.x=1; player.y=1; player.floatX=1; player.floatY=1; player.angle=0; player.scale=1;
   keysCollected=0; gameOver=false; victory=false; transitioning=false; transitionProgress=0;
-  lvl.enemies.forEach(e=>{ e.floatX=e.x; e.floatY=e.y; });
+  // BUG: enemies are NOT reset here
   levelMessage = `Level ${currentLevel+1}: Collect keys & diamonds, reach the portal!`;
   messageTimer = 180;
 }
 
-function restartGame(){ currentLevel=0; score=0; victory=false; gameStarted=false; }
+function restartGame() {
+  currentLevel = 0;
+  score = 0;
+  victory = false;
+  gameStarted = false;
+  // BUG: gameOver and enemy positions are NOT reset here
+  // So when you restart, enemies remain where they were,
+  // and if player spawns on an enemy, death loop occurs
+}
 
 function movePlayer(){
   if(gameOver || !gameStarted || messageTimer>0 || victory || transitioning) return;
@@ -92,26 +99,6 @@ function movePlayer(){
   let lvl = levels[currentLevel];
   lvl.keys = lvl.keys.filter(k=>{ if(k.x===player.x && k.y===player.y){ keysCollected++; score+=100; return false;} return true; });
   lvl.diamonds = lvl.diamonds.filter(d=>{ if(d.x===player.x && d.y===player.y){ score+=500; return false;} return true; });
-}
-
-function portalPull(){
-  if(transitioning) return;
-  let lvl = levels[currentLevel];
-  let p = lvl.portal;
-  let dx = (p.x+0.5) - player.floatX;
-  let dy = (p.y+0.5) - player.floatY;
-  let dist = Math.sqrt(dx*dx + dy*dy);
-  if(dist < 2){
-    let pull = 0.02 + (2 - dist) * 0.03;
-    player.floatX += dx * pull;
-    player.floatY += dy * pull;
-    player.x = Math.round(player.floatX);
-    player.y = Math.round(player.floatY);
-    player.angle += 0.2 + (2 - dist) * 0.2;
-    player.scale = Math.max(0.2, dist / 2);
-    p.pulse = 1 + (2 - dist) * 0.2;
-    if(dist < 0.2 && lvl.keys.length === 0){ transitioning = true; transitionProgress = 0; }
-  } else { player.angle = 0; player.scale = 1; p.pulse = 1; }
 }
 
 function moveEnemiesSmooth(){
@@ -131,20 +118,22 @@ function moveEnemiesSmooth(){
   });
 }
 
-function handleTransition(){
-  if(!transitioning) return;
-  transitionProgress += 0.03;
-  if(transitionProgress>=1){
-    transitioning = false;
-    currentLevel++;
-    if(currentLevel >= levels.length){
-      victory=true;
-      levelMessage="You escaped the loop!";
-      messageTimer=600;
-    } else {
-      resetLevel();
-    }
-  }
+function portalPull(){
+  let lvl = levels[currentLevel];
+  let p = lvl.portal;
+  let dx = (p.x+0.5) - player.floatX;
+  let dy = (p.y+0.5) - player.floatY;
+  let dist = Math.sqrt(dx*dx + dy*dy);
+  if(dist < 2){
+    let pull = 0.02 + (2 - dist) * 0.03;
+    player.floatX += dx * pull;
+    player.floatY += dy * pull;
+    player.x = Math.round(player.floatX);
+    player.y = Math.round(player.floatY);
+    player.angle += 0.2 + (2 - dist) * 0.2;
+    player.scale = Math.max(0.2, dist / 2);
+    p.pulse = 1 + (2 - dist) * 0.2;
+  } else { player.angle=0; player.scale=1; p.pulse=1; }
 }
 
 function draw(){
@@ -206,11 +195,6 @@ function draw(){
   ctx.font="20px Arial";
   ctx.fillText(`Level: ${currentLevel+1}  Keys: ${keysCollected}  Score: ${score}`,10,20);
 
-  if(messageTimer>0){
-    ctx.fillText(levelMessage, canvas.width/2 - ctx.measureText(levelMessage).width/2, canvas.height/2);
-    messageTimer--;
-  }
-
   if(!gameStarted){
     let msg = "Press ENTER to start";
     ctx.fillText(msg, canvas.width/2 - ctx.measureText(msg).width/2, canvas.height/2);
@@ -219,10 +203,6 @@ function draw(){
   if(gameOver){
     ctx.fillText("Game Over! Press R to restart", canvas.width/2 - ctx.measureText("Game Over! Press R to restart").width/2, canvas.height/2+30);
   }
-
-  if(victory){
-    ctx.fillText("Victory! You escaped the loop!", canvas.width/2 - ctx.measureText("Victory! You escaped the loop!").width/2, canvas.height/2+30);
-  }
 }
 
 function loop(){
@@ -230,7 +210,6 @@ function loop(){
     movePlayer();
     moveEnemiesSmooth();
     portalPull();
-    handleTransition();
   }
   draw();
   requestAnimationFrame(loop);
