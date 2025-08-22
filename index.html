@@ -1,309 +1,225 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Escape The Loop</title>
-<style>
-body { margin:0; background:#111; display:flex; flex-direction:column; align-items:center; color:white; font-family:monospace; user-select:none; }
-canvas { border:2px solid #0ff; margin-top:20px; background:#000; }
-h1 { margin-top:20px; color:#0ff; }
-</style>
+  <meta charset="UTF-8">
+  <title>Escape The Loop</title>
+  <style>
+    body { background:#111; margin:0; display:flex; justify-content:center; align-items:center; height:100vh; }
+    canvas { background:#222; display:block; border:3px solid #555; }
+  </style>
 </head>
 <body>
-<h1>Escape The Loop</h1>
-<canvas id="gameCanvas" width="640" height="600"></canvas>
+<canvas id="gameCanvas" width="640" height="640"></canvas>
 <script>
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
-const tileSize = 40;
 
-// ----------------- GAME STATE -----------------
-let currentLevel = 0;
-let player = {x:1, y:1};
-let keysCollected = 0;
-let score = 0;
+const tileSize = 40;
+let keysPressed = {};
+let gameStarted = false;
 let gameOver = false;
 let victory = false;
-let gameStarted = false;
+let currentLevel = 0;
+let keysCollected = 0;
+let score = 0;
+
 let levelMessage = "";
 let messageTimer = 0;
 
-// ----------------- LEVELS -----------------
+let player = {x:1,y:1};
+
+// --- LEVELS ---
 let levels = [
-  // LEVEL 1
+  // Level 1 (Tutorial)
   {
     maze:[
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-      [1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
-      [1,0,1,1,1,0,1,1,0,1,0,1,1,1,0,1],
-      [1,0,0,0,1,0,0,0,0,0,0,1,0,0,0,1],
-      [1,1,1,0,1,1,1,1,1,1,0,1,0,1,1,1],
-      [1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
-      [1,0,1,1,1,0,1,1,0,1,1,1,1,1,0,1],
-      [1,0,0,0,1,0,0,1,0,0,0,0,0,1,0,1],
-      [1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1],
-      [1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
-      [1,0,1,1,1,1,1,1,0,1,0,1,1,1,0,1],
-      [1,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1],
-      [1,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1],
       [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,0,1,1,1,1,1,1,1,1,0,1,1,1,0,1],
+      [1,0,1,0,0,0,0,0,0,1,0,0,0,1,0,1],
+      [1,0,1,0,1,1,1,1,0,1,1,1,0,1,0,1],
+      [1,0,1,0,1,0,0,1,0,0,0,1,0,1,0,1],
+      [1,0,0,0,1,0,1,1,1,1,0,1,0,0,0,1],
+      [1,1,1,0,1,0,0,0,0,1,0,1,1,1,0,1],
+      [1,0,0,0,1,1,1,1,0,1,0,0,0,1,0,1],
+      [1,0,1,0,0,0,0,1,0,1,1,1,0,1,0,1],
+      [1,0,1,1,1,1,0,1,0,0,0,1,0,1,0,1],
+      [1,0,0,0,0,1,0,1,1,1,0,1,0,1,0,1],
+      [1,1,1,1,0,1,0,0,0,1,0,1,0,1,0,1],
+      [1,0,0,1,0,1,1,1,0,1,0,1,0,1,0,1],
+      [1,0,0,0,0,0,0,1,0,0,0,0,0,0,9,1],
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
     ],
-    keys:[{x:3,y:1},{x:6,y:5}],
-    diamonds:[{x:2,y:6}],
-    enemies:[{x:10,y:3,speed:0.012},{x:7,y:7,speed:0.015}],
-    portal:{x:14,y:13}
+    keys:[{x:3,y:3}],
+    diamonds:[{x:5,y:5}],
+    enemies:[{x:10,y:2,floatX:10,floatY:2,speed:0.02}],
+    portal:{x:14,y:14}
   },
-  // LEVEL 2
+  // Level 2
   {
     maze:[
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-      [1,0,1,0,0,0,1,0,1,0,0,0,1,0,0,1],
-      [1,0,1,1,1,0,1,1,0,1,1,1,0,1,1,1],
-      [1,0,0,0,1,0,0,0,0,0,0,1,0,0,0,1],
-      [1,1,1,0,1,1,1,1,1,1,0,1,1,1,0,1],
-      [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
-      [1,0,1,1,1,0,1,1,0,1,1,1,1,1,0,1],
-      [1,0,0,0,1,0,0,1,0,0,0,0,0,1,0,1],
-      [1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1],
-      [1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
-      [1,0,1,1,1,1,1,1,0,1,0,1,1,1,0,1],
-      [1,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1],
-      [1,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1],
-      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,0,0,0,0,1,0,0,0,0,0,0,1,0,0,1],
+      [1,0,1,1,0,1,0,1,1,1,1,0,1,0,1,1],
+      [1,0,0,1,0,0,0,1,0,0,1,0,0,0,0,1],
+      [1,1,0,1,1,1,0,1,0,1,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1],
+      [1,0,1,1,1,1,0,1,1,1,1,1,0,1,0,1],
+      [1,0,0,0,0,1,0,0,0,0,0,1,0,1,0,1],
+      [1,1,1,1,0,1,1,1,1,1,0,1,0,1,0,1],
+      [1,0,0,1,0,0,0,0,0,1,0,1,0,1,0,1],
+      [1,0,1,1,1,1,1,1,0,1,0,1,0,1,0,1],
+      [1,0,0,0,0,0,0,1,0,1,0,0,0,0,0,1],
+      [1,1,1,1,1,1,0,1,1,1,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1],
+      [1,0,1,1,1,1,0,0,0,1,1,1,0,0,9,1],
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
     ],
-    keys:[{x:2,y:1},{x:5,y:5},{x:12,y:9}],
-    diamonds:[{x:3,y:6},{x:11,y:4}],
-    enemies:[
-      {x:10,y:3,speed:0.014},
-      {x:7,y:7,speed:0.016},
-      {x:12,y:11,speed:0.020}
-    ],
-    portal:{x:14,y:13}
+    keys:[{x:2,y:1},{x:12,y:13}],
+    diamonds:[{x:7,y:7}],
+    enemies:[{x:13,y:2,floatX:13,floatY:2,speed:0.025}],
+    portal:{x:14,y:14}
   },
-  // LEVEL 3
+  // Level 3
   {
     maze:[
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-      [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
-      [1,0,1,1,0,1,0,1,1,0,1,0,1,1,0,1],
-      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-      [1,1,1,1,1,0,1,1,1,1,1,1,0,1,1,1],
-      [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
-      [1,0,1,1,1,0,1,1,0,1,1,1,1,1,0,1],
-      [1,0,0,0,1,0,0,1,0,0,0,0,0,1,0,1],
-      [1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1],
       [1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
       [1,0,1,1,1,1,1,1,0,1,0,1,1,1,0,1],
-      [1,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1],
-      [1,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1],
-      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,0,1,0,0,0,0,1,0,1,0,0,0,1,0,1],
+      [1,0,1,0,1,1,0,1,0,1,1,1,0,1,0,1],
+      [1,0,1,0,1,0,0,1,0,0,0,1,0,1,0,1],
+      [1,0,0,0,1,0,1,1,1,1,0,1,0,0,0,1],
+      [1,1,1,0,1,0,0,0,0,1,0,1,1,1,0,1],
+      [1,0,0,0,1,1,1,1,0,1,0,0,0,1,0,1],
+      [1,0,1,0,0,0,0,1,0,1,1,1,0,1,0,1],
+      [1,0,1,1,1,1,0,1,0,0,0,1,0,1,0,1],
+      [1,0,0,0,0,1,0,1,1,1,0,1,0,1,0,1],
+      [1,1,1,1,0,1,0,0,0,1,0,1,0,1,0,1],
+      [1,0,0,1,0,1,1,1,0,1,0,1,0,1,0,1],
+      [1,0,0,0,0,0,0,1,0,0,0,0,0,0,9,1],
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
     ],
-    keys:[{x:2,y:1},{x:5,y:5},{x:12,y:9},{x:3,y:10}],
-    diamonds:[{x:3,y:6},{x:11,y:4},{x:7,y:12}],
+    keys:[{x:2,y:1},{x:13,y:13},{x:6,y:10}],
+    diamonds:[{x:5,y:5},{x:10,y:10}],
     enemies:[
-      {x:10,y:3,speed:0.015},
-      {x:7,y:7,speed:0.016},
-      {x:12,y:11,speed:0.017},
-      {x:4,y:9,speed:0.018}
+      {x:10,y:2,floatX:10,floatY:2,speed:0.03},
+      {x:3,y:8,floatX:3,floatY:8,speed:0.028}
     ],
-    portal:{x:14,y:13}
+    portal:{x:14,y:14}
   },
-  // LEVEL 4
+  // Level 4
   {
     maze:[
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-      [1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1],
-      [1,0,1,1,0,1,1,0,1,1,0,1,1,0,0,1],
-      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-      [1,0,1,1,1,0,1,1,1,1,1,0,1,1,1,1],
       [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
-      [1,0,1,1,1,0,1,1,0,1,1,1,1,1,0,1],
-      [1,0,0,0,1,0,0,1,0,0,0,0,0,1,0,1],
-      [1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1],
-      [1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
-      [1,0,1,1,1,1,1,1,0,1,0,1,1,1,0,1],
-      [1,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1],
-      [1,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1],
-      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,0,1,1,1,1,0,1,0,1,1,1,1,1,0,1],
+      [1,0,1,0,0,0,0,1,0,0,0,0,0,1,0,1],
+      [1,0,1,0,1,1,1,1,1,1,1,1,0,1,0,1],
+      [1,0,0,0,1,0,0,0,0,0,0,1,0,1,0,1],
+      [1,1,1,0,1,0,1,1,1,1,0,1,0,1,0,1],
+      [1,0,0,0,0,0,0,1,0,1,0,1,0,0,0,1],
+      [1,0,1,1,1,1,0,1,0,1,0,1,1,1,0,1],
+      [1,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1],
+      [1,1,1,1,1,1,0,1,1,1,1,1,0,1,0,1],
+      [1,0,0,0,0,0,0,0,0,0,0,1,0,1,0,1],
+      [1,0,1,1,1,1,1,1,1,1,0,1,0,1,0,1],
+      [1,0,0,0,0,0,0,0,0,1,0,0,0,0,9,1],
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
     ],
-    keys:[{x:2,y:1},{x:5,y:5},{x:12,y:9},{x:3,y:10}],
-    diamonds:[{x:3,y:6},{x:11,y:4},{x:7,y:12},{x:10,y:10}],
+    keys:[{x:2,y:1},{x:10,y:9},{x:13,y:13},{x:7,y:4}],
+    diamonds:[{x:5,y:2},{x:11,y:11}],
     enemies:[
-      {x:10,y:3,speed:0.016},
-      {x:7,y:7,speed:0.016},
-      {x:12,y:11,speed:0.017},
-      {x:4,y:9,speed:0.017},
-      {x:6,y:5,speed:0.016}
+      {x:12,y:2,floatX:12,floatY:2,speed:0.035},
+      {x:4,y:10,floatX:4,floatY:10,speed:0.03},
+      {x:8,y:6,floatX:8,floatY:6,speed:0.032}
     ],
     portal:{x:14,y:13}
   },
-  // LEVEL 5
+  // Level 5 (Final)
   {
     maze:[
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-      [1,0,0,0,1,0,0,1,0,0,1,0,0,0,0,1],
-      [1,0,1,1,0,1,1,0,1,1,0,1,1,0,0,1],
       [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-      [1,1,1,0,1,1,1,1,1,1,1,0,1,1,1,1],
+      [1,0,1,1,1,1,1,1,1,1,1,1,1,1,0,1],
+      [1,0,1,0,0,0,0,0,0,0,0,0,0,1,0,1],
+      [1,0,1,0,1,1,1,1,1,1,1,1,0,1,0,1],
+      [1,0,1,0,1,0,0,0,0,0,0,1,0,1,0,1],
+      [1,0,0,0,1,0,1,1,1,1,0,1,0,0,0,1],
+      [1,1,1,0,1,0,0,0,0,1,0,1,1,1,0,1],
+      [1,0,0,0,1,1,1,1,0,1,0,0,0,1,0,1],
+      [1,0,1,0,0,0,0,1,0,1,1,1,0,1,0,1],
+      [1,0,1,1,1,1,0,1,0,0,0,1,0,1,0,1],
+      [1,0,0,0,0,1,0,1,1,1,0,1,0,1,0,1],
+      [1,1,1,1,0,1,0,0,0,1,0,1,0,1,0,1],
+      [1,0,0,1,0,1,1,1,0,1,0,1,0,1,9,1],
       [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
-      [1,0,1,1,1,0,1,1,0,1,1,1,1,1,0,1],
-      [1,0,0,0,1,0,0,1,0,0,0,0,0,1,0,1],
-      [1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1],
-      [1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
-      [1,0,1,1,1,1,1,1,0,1,0,1,1,1,0,1],
-      [1,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1],
-      [1,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1],
-      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
     ],
-    keys:[{x:2,y:1},{x:5,y:5},{x:12,y:9},{x:3,y:10},{x:10,y:2}],
-    diamonds:[{x:3,y:6},{x:11,y:4},{x:7,y:12},{x:10,y:10},{x:5,y:9}],
+    keys:[{x:2,y:1},{x:6,y:6},{x:10,y:12},{x:12,y:8},{x:13,y:13}],
+    diamonds:[{x:7,y:2},{x:4,y:10},{x:11,y:11}],
     enemies:[
-      {x:10,y:3,speed:0.017},
-      {x:7,y:7,speed:0.018},
-      {x:12,y:11,speed:0.019},
-      {x:4,y:9,speed:0.020},
-      {x:6,y:5,speed:0.018}
+      {x:13,y:2,floatX:13,floatY:2,speed:0.04},
+      {x:3,y:10,floatX:3,floatY:10,speed:0.038},
+      {x:7,y:6,floatX:7,floatY:6,speed:0.04},
+      {x:9,y:8,floatX:9,floatY:8,speed:0.042}
     ],
     portal:{x:14,y:13}
   }
 ];
 
-// Initialize float positions for all enemies
-levels.forEach(level=>{
-  level.enemies.forEach(e=>{ e.floatX=e.x; e.floatY=e.y; });
-});
-
-// ----------------- INPUT -----------------
-let keysDown = {};
-document.addEventListener("keydown", e=>{
-  keysDown[e.key]=true;
-  if(!gameStarted && e.key==="Enter") gameStarted=true;
-  if(e.key==="r"||e.key==="R") resetLevel();
-});
-document.addEventListener("keyup", e=>keysDown[e.key]=false);
-
-// ----------------- FUNCTIONS -----------------
+// --- Reset Level ---
 function resetLevel(){
   let lvl = levels[currentLevel];
-  player.x=1; player.y=1;
-  keysCollected=0; gameOver=false;
+  gameOver=false;
+  victory=false;
+  keysCollected=0;
+  player.x = 1; player.y = 1;
   lvl.enemies.forEach(e=>{ e.floatX=e.x; e.floatY=e.y; });
-  
-  // Level start message
-  levelMessage = `Level ${currentLevel+1}: Collect all keys and reach the portal!`;
-  messageTimer = 180; // 3 seconds at 60FPS
+  lvl.enemies.forEach(e=>{
+    if(Math.floor(e.floatX)===player.x && Math.floor(e.floatY)===player.y){ player.y+=1; }
+  });
+  levelMessage=`Level ${currentLevel+1}: Collect all keys and reach the portal!`;
+  messageTimer=180;
 }
 
+// --- Input ---
+window.addEventListener("keydown",e=>{
+  keysPressed[e.key]=true;
+  if(e.key==="Enter") gameStarted=true;
+  if(e.key==="r"||e.key==="R"){ resetLevel(); }
+});
+window.addEventListener("keyup",e=>{ keysPressed[e.key]=false; });
+
+// --- Movement ---
 function movePlayer(){
-  if(gameOver || !gameStarted || messageTimer>0) return;
-  let dx=0, dy=0;
-  if(keysDown["ArrowUp"]) dy=-1;
-  if(keysDown["ArrowDown"]) dy=1;
-  if(keysDown["ArrowLeft"]) dx=-1;
-  if(keysDown["ArrowRight"]) dx=1;
-  let newX=player.x+dx, newY=player.y+dy;
-  let maze=levels[currentLevel].maze;
-  if(maze[newY] && maze[newY][newX]===0) { player.x=newX; player.y=newY; }
-  
-  levels[currentLevel].keys=levels[currentLevel].keys.filter(k=>{
-    if(k.x===player.x && k.y===player.y){ keysCollected++; score+=10; return false;} return true;
-  });
-  levels[currentLevel].diamonds=levels[currentLevel].diamonds.filter(d=>{
-    if(d.x===player.x && d.y===player.y){ score+=5; return false;} return true;
-  });
-  let p=levels[currentLevel].portal;
-  if(player.x===p.x && player.y===p.y){
-    currentLevel++;
-    if(currentLevel>=levels.length){ victory=true; gameStarted=false; }
-    else resetLevel();
+  if(gameOver||!gameStarted||messageTimer>0) return;
+  let dx=0,dy=0;
+  if(keysPressed["ArrowUp"]||keysPressed["w"]) dy=-1;
+  if(keysPressed["ArrowDown"]||keysPressed["s"]) dy=1;
+  if(keysPressed["ArrowLeft"]||keysPressed["a"]) dx=-1;
+  if(keysPressed["ArrowRight"]||keysPressed["d"]) dx=1;
+  if(dx!==0||dy!==0){
+    let maze=levels[currentLevel].maze;
+    let nx=player.x+dx, ny=player.y+dy;
+    if(maze[ny][nx]===0||maze[ny][nx]===9){ player.x=nx; player.y=ny; }
+    levels[currentLevel].keys=levels[currentLevel].keys.filter(k=>{
+      if(k.x===player.x && k.y===player.y){ keysCollected++; score+=100; return false; }
+      return true;
+    });
+    levels[currentLevel].diamonds=levels[currentLevel].diamonds.filter(d=>{
+      if(d.x===player.x && d.y===player.y){ score+=500; return false; }
+      return true;
+    });
+    if(player.x===levels[currentLevel].portal.x && player.y===levels[currentLevel].portal.y){
+      if(levels[currentLevel].keys.length===0){
+        currentLevel++;
+        if(currentLevel>=levels.length){ victory=true; gameStarted=false; }
+        else resetLevel();
+      }
+    }
   }
-  levels[currentLevel].enemies.forEach(e=>{ if(e.x===player.x && e.y===player.y) gameOver=true; });
 }
-
-// ----------------- SMOOTH ENEMIES -----------------
 function moveEnemiesSmooth(){
-  let maze = levels[currentLevel].maze;
+  let maze=levels[currentLevel].maze;
   levels[currentLevel].enemies.forEach(e=>{
-    let dx=player.x - e.floatX;
-    let dy=player.y - e.floatY;
-    let dist = Math.sqrt(dx*dx + dy*dy);
-    if(dist>0.05){
-      let stepX=(dx/dist)*e.speed;
-      let stepY=(dy/dist)*e.speed;
-      let nextX=e.floatX+stepX;
-      let nextY=e.floatY+stepY;
-      if(maze[Math.floor(e.floatY)][Math.floor(nextX)]===0) e.floatX=nextX;
-      if(maze[Math.floor(nextY)][Math.floor(e.floatX)]===0) e.floatY=nextY;
-    }
-    e.x=Math.floor(e.floatX);
-    e.y=Math.floor(e.floatY);
-  });
-}
-
-// ----------------- DRAW -----------------
-function draw(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  
-  if(!gameStarted){
-    ctx.fillStyle="white";
-    ctx.font="32px monospace";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("Press ENTER to Start", canvas.width/2, canvas.height/2);
-    return;
-  }
-
-  if(messageTimer>0) messageTimer--;
-
-  let maze = levels[currentLevel].maze;
-  for(let y=0;y<maze.length;y++){
-    for(let x=0;x<maze[y].length;x++){
-      if(maze[y][x]===1){ ctx.fillStyle="#444"; ctx.fillRect(x*tileSize,y*tileSize,tileSize,tileSize);}
-    }
-  }
-  levels[currentLevel].keys.forEach(k=>{ ctx.fillStyle="yellow"; ctx.fillRect(k.x*tileSize+10,k.y*tileSize+10,20,20); });
-  levels[currentLevel].diamonds.forEach(d=>{
-    ctx.fillStyle="magenta"; ctx.beginPath();
-    ctx.moveTo(d.x*tileSize+20,d.y*tileSize+5);
-    ctx.lineTo(d.x*tileSize+35,d.y*tileSize+20);
-    ctx.lineTo(d.x*tileSize+20,d.y*tileSize+35);
-    ctx.lineTo(d.x*tileSize+5,d.y*tileSize+20);
-    ctx.closePath(); ctx.fill();
-  });
-  levels[currentLevel].enemies.forEach(e=>{ 
-    ctx.fillStyle="red"; ctx.fillRect(e.floatX*tileSize+5,e.floatY*tileSize+5,30,30); 
-  });
-  let p=levels[currentLevel].portal;
-  ctx.fillStyle="cyan"; ctx.fillRect(p.x*tileSize+5,p.y*tileSize+5,30,30);
-  ctx.fillStyle="aqua"; ctx.fillRect(player.x*tileSize+5,player.y*tileSize+5,30,30);
-  ctx.fillStyle="white"; ctx.font="16px monospace";
-  ctx.fillText(`Level: ${currentLevel+1} Keys: ${keysCollected} Score: ${score}`,10,20);
-
-  if(messageTimer>0){
-    ctx.fillStyle="yellow";
-    ctx.font="24px monospace";
-    ctx.textAlign="center";
-    ctx.textBaseline="middle";
-    ctx.fillText(levelMessage, canvas.width/2, canvas.height/2 - 50);
-  }
-
-  if(gameOver){ ctx.fillStyle="red"; ctx.fillText("GAME OVER! Press R to restart.",canvas.width/2 - 150,300); }
-  if(victory){ ctx.fillStyle="lime"; ctx.fillText("YOU WON! Refresh to play again.",canvas.width/2 - 150,300); }
-}
-
-// ----------------- GAME LOOP -----------------
-function loop(){
-  if(gameStarted){ movePlayer(); moveEnemiesSmooth(); }
-  draw();
-  requestAnimationFrame(loop);
-}
-loop();
-</script>
-</body>
-</html>
