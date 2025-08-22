@@ -1,13 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Escape The Loop</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<title>Escape The Loop</title>
+<style>
+    body {
+        margin: 0;
+        background: #111;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        color: #fff;
+        font-family: monospace;
+    }
+    canvas {
+        background: #222;
+        display: block;
+        touch-action: none;
+    }
+    #announcement {
+        margin-top: 10px;
+        font-size: 16px;
+        text-align: center;
+        color: #0ff;
+    }
+    #touchControls {
+        margin-top: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+    }
+    #touchControls button {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+        background: #333;
+        color: #0ff;
+        border: none;
+        border-radius: 10px;
+        touch-action: manipulation;
+    }
+    #touchControls div {
+        display: flex;
+        gap: 5px;
+    }
+</style>
 </head>
 <body>
-    <div id="announcement">Welcome to Escape The Loop!</div>
-    <canvas id="gameCanvas" width="640" height="480"></canvas>
+    <canvas id="gameCanvas" width="640" height="600"></canvas>
+    <div id="announcement">You are at square (X:1, Y:1)</div>
+    <div id="touchControls">
+        <button id="up">⬆️</button>
+        <div>
+            <button id="left">⬅️</button>
+            <button id="down">⬇️</button>
+            <button id="right">➡️</button>
+        </div>
+    </div>
+
     <script src="game.js"></script>
 </body>
 </html>
