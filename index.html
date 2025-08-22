@@ -39,8 +39,8 @@ document.addEventListener("keyup", e=>{ delete keysDown[e.key]; });
 
 // --- Levels --- //
 let levels = [
-{
-  maze:[
+  {
+    maze:[
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
       [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
       [1,0,1,1,1,0,1,0,1,1,1,1,1,1,0,1],
@@ -56,90 +56,13 @@ let levels = [
       [1,0,1,1,1,1,1,1,1,1,1,1,0,1,0,1],
       [1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-  ],
-  enemies:[{x:5,y:5,floatX:5,floatY:5,speed:0.02}],
-  keys:[{x:13,y:1}],
-  diamonds:[{x:13,y:13}],
-  portal:{x:14,y:13,pulse:1}
-},
-// Add 4 more levels with increasing difficulty
-{
-  maze:[
-      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-      [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,1],
-      [1,0,1,1,0,1,0,1,1,0,1,0,1,1,0,1],
-      [1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1],
-      [1,1,1,0,1,1,1,1,1,1,1,1,0,1,0,1],
-      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-      [1,0,1,1,1,1,1,1,1,1,1,1,1,1,0,1],
-      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-  ],
-  enemies:[{x:5,y:5,floatX:5,floatY:5,speed:0.03},{x:10,y:7,floatX:10,floatY:7,speed:0.03}],
-  keys:[{x:2,y:1},{x:13,y:1}],
-  diamonds:[{x:2,y:7},{x:13,y:7}],
-  portal:{x:14,y:7,pulse:1}
-},
-{
-  maze:[
-      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-      [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,1],
-      [1,0,1,0,1,1,1,0,1,0,1,1,1,0,1,1],
-      [1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
-      [1,0,1,1,1,1,1,1,1,1,1,1,1,1,0,1],
-      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-  ],
-  enemies:[
-    {x:3,y:3,floatX:3,floatY:3,speed:0.035},
-    {x:12,y:5,floatX:12,floatY:5,speed:0.035},
-    {x:7,y:4,floatX:7,floatY:4,speed:0.03}
-  ],
-  keys:[{x:2,y:1},{x:13,y:1},{x:7,y:5}],
-  diamonds:[{x:2,y:5},{x:13,y:5},{x:7,y:3}],
-  portal:{x:14,y:5,pulse:1}
-},
-{
-  maze:[
-      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-      [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,1],
-      [1,0,1,0,1,1,1,0,1,0,1,1,1,0,1,1],
-      [1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
-      [1,0,1,1,1,1,1,1,1,1,1,1,1,1,0,1],
-      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-  ],
-  enemies:[
-    {x:3,y:3,floatX:3,floatY:3,speed:0.04},
-    {x:12,y:5,floatX:12,floatY:5,speed:0.04},
-    {x:7,y:4,floatX:7,floatY:4,speed:0.035},
-    {x:10,y:2,floatX:10,floatY:2,speed:0.03}
-  ],
-  keys:[{x:2,y:1},{x:13,y:1},{x:7,y:5},{x:5,y:3}],
-  diamonds:[{x:2,y:5},{x:13,y:5},{x:7,y:3},{x:10,y:1}],
-  portal:{x:14,y:5,pulse:1}
-},
-{
-  maze:[
-      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-      [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,1],
-      [1,0,1,0,1,1,1,0,1,0,1,1,1,0,1,1],
-      [1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
-      [1,0,1,1,1,1,1,1,1,1,1,1,1,1,0,1],
-      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-  ],
-  enemies:[
-    {x:3,y:3,floatX:3,floatY:3,speed:0.045},
-    {x:12,y:5,floatX:12,floatY:5,speed:0.045},
-    {x:7,y:4,floatX:7,floatY:4,speed:0.04},
-    {x:10,y:2,floatX:10,floatY:2,speed:0.035},
-    {x:5,y:5,floatX:5,floatY:5,speed:0.03}
-  ],
-  keys:[{x:2,y:1},{x:13,y:1},{x:7,y:5},{x:5,y:3},{x:10,y:3}],
-  diamonds:[{x:2,y:5},{x:13,y:5},{x:7,y:3},{x:10,y:1},{x:5,y:7}],
-  portal:{x:14,y:5,pulse:1}
-}
+    ],
+    enemies:[{x:5,y:5,floatX:5,floatY:5,speed:0.02}],
+    keys:[{x:13,y:1}],
+    diamonds:[{x:13,y:13}],
+    portal:{x:14,y:13,pulse:1}
+  }
+  // You can add more levels here with the same structure
 ];
 
 // --- Functions --- //
@@ -175,8 +98,8 @@ function portalPull(){
   if(transitioning) return;
   let lvl = levels[currentLevel];
   let p = lvl.portal;
-  let px = p.x + 0.5, py = p.y + 0.5;
-  let dx = px - player.floatX, dy = py - player.floatY;
+  let dx = (p.x+0.5) - player.floatX;
+  let dy = (p.y+0.5) - player.floatY;
   let dist = Math.sqrt(dx*dx + dy*dy);
   if(dist < 2){
     let pull = 0.02 + (2 - dist) * 0.03;
@@ -210,7 +133,7 @@ function moveEnemiesSmooth(){
 
 function handleTransition(){
   if(!transitioning) return;
-  transitionProgress += 0.02;
+  transitionProgress += 0.03;
   if(transitionProgress>=1){
     transitioning = false;
     currentLevel++;
@@ -257,11 +180,11 @@ function draw(){
   ctx.save();
   let t = performance.now()/200;
   ctx.translate(p.x*tileSize+20, p.y*tileSize+20);
-  ctx.rotate(t*2); // swirl
+  ctx.rotate(t*2);
   ctx.scale(p.pulse, p.pulse);
   ctx.fillStyle="magenta";
   ctx.beginPath();
-  ctx.arc(0,0,15*(1-transitionProgress),0,Math.PI*2);
+  ctx.arc(0,0,15,0,Math.PI*2);
   ctx.fill();
   ctx.restore();
 
@@ -272,8 +195,8 @@ function draw(){
   // Player
   ctx.save();
   ctx.translate(player.floatX*tileSize+20, player.floatY*tileSize+20);
-  ctx.rotate(player.angle + transitionProgress*10);
-  ctx.scale(player.scale*(1-transitionProgress), player.scale*(1-transitionProgress));
+  ctx.rotate(player.angle);
+  ctx.scale(player.scale, player.scale);
   ctx.fillStyle="cyan";
   ctx.fillRect(-15,-15,30,30);
   ctx.restore();
