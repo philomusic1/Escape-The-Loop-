@@ -928,7 +928,132 @@
         ctx.restore();
       }
 
-      // Game over
-      if(gameOver){
+            // Game over
+      if (gameOver) {
         ctx.save();
-        ctx.fillStyle="rgba(255,0,0,0
+        ctx.fillStyle = "rgba(255,0,0,0.9)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const gameOverPulse = Math.sin(animationTime * 10) * 0.3 + 0.7;
+        ctx.fillStyle = `rgba(255,255,255,${gameOverPulse})`;
+        ctx.font = "bold 42px Courier New";
+        ctx.shadowColor = "#ff0000";
+        ctx.shadowBlur = 25;
+
+        const msg1 = "💀 GAME OVER 💀";
+        const w1 = ctx.measureText(msg1).width;
+        ctx.fillText(msg1, (canvas.width - w1) / 2, canvas.height / 2 - 30);
+
+        ctx.font = "bold 26px Courier New";
+        ctx.shadowBlur = 15;
+        const msg2 = "Press R to restart";
+        const w2 = ctx.measureText(msg2).width;
+        ctx.fillText(msg2, (canvas.width - w2) / 2, canvas.height / 2 + 40);
+
+        ctx.restore();
+      }
+
+      // Victory screen
+      if (victory) {
+        ctx.save();
+        ctx.fillStyle = "rgba(0,255,136,0.95)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const victoryGlow = Math.sin(animationTime * 6) * 0.4 + 0.6;
+        const victoryHue = (animationTime * 200) % 360;
+        ctx.fillStyle = `hsl(${victoryHue},100%,90%)`;
+        ctx.font = "bold 52px Courier New";
+        ctx.shadowColor = `hsl(${victoryHue},100%,50%)`;
+        ctx.shadowBlur = 35 * victoryGlow;
+
+        const vmsg1 = "🎉✨ ULTIMATE VICTORY! ✨🎉";
+        const vw1 = ctx.measureText(vmsg1).width;
+        ctx.fillText(vmsg1, (canvas.width - vw1) / 2, canvas.height / 2 - 80);
+
+        ctx.font = "bold 36px Courier New";
+        ctx.shadowBlur = 25;
+        const vmsg2 = "You escaped all the loops!";
+        const vw2 = ctx.measureText(vmsg2).width;
+        ctx.fillText(vmsg2, (canvas.width - vw2) / 2, canvas.height / 2 - 20);
+
+        ctx.font = "bold 28px Courier New";
+        ctx.shadowBlur = 20;
+        const vmsg3 = `🏆 Final Score: ${score} 🏆`;
+        const vw3 = ctx.measureText(vmsg3).width;
+        ctx.fillText(vmsg3, (canvas.width - vw3) / 2, canvas.height / 2 + 40);
+
+        ctx.font = "22px Courier New";
+        ctx.shadowBlur = 15;
+        const vmsg4 = "Press R to play again";
+        const vw4 = ctx.measureText(vmsg4).width;
+        ctx.fillText(vmsg4, (canvas.width - vw4) / 2, canvas.height / 2 + 90);
+
+        ctx.restore();
+      }
+
+      // Level transition effect
+      if (transitioning) {
+        ctx.save();
+        const alpha = transitionProgress;
+        const transHue = (animationTime * 300) % 360;
+        ctx.fillStyle = `hsla(${transHue},100%,50%,${alpha * 0.8})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        for (let layer = 0; layer < 3; layer++) {
+          ctx.save();
+          const dir = layer % 2 ? 1 : -1;
+          ctx.rotate(transitionProgress * Math.PI * 6 * dir);
+
+          for (let i = 0; i < 12; i++) {
+            ctx.save();
+            ctx.rotate((i / 12) * Math.PI * 2);
+            const hue = (transHue + i * 30 + layer * 120) % 360;
+            ctx.fillStyle = `hsla(${hue},100%,70%,${(1 - transitionProgress) * 0.8})`;
+            ctx.fillRect(
+              -canvas.width / 2,
+              -8,
+              canvas.width * transitionProgress,
+              16
+            );
+            ctx.restore();
+          }
+
+          ctx.restore();
+        }
+
+        ctx.restore();
+      }
+    } // end draw()
+
+    // --- GAME LOOP ---
+    function loop() {
+      if (gameStarted && !gameOver && !victory) {
+        updatePlayer();
+        moveEnemiesSmart();
+        portalPull();
+        handleTransition();
+      }
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    loop();
+      // end of draw() and loop() are already defined above…
+
+      // --- GAME LOOP START ---
+      function loop() {
+        if (gameStarted && !gameOver && !victory) {
+          updatePlayer();
+          moveEnemiesSmart();
+          portalPull();
+          handleTransition();
+        }
+        draw();
+        requestAnimationFrame(loop);
+      }
+
+      loop();
+    </script>
+  </body>
+</html>
