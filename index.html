@@ -38,7 +38,7 @@
 </head>
 <body>
 <div class="title">✨ ESCAPE THE LOOP ✨</div>
-<div class="instructions">🔑 Use ARROW KEYS to move • Collect 3 KEYS to activate portal • Avoid enemies 🔴</div>
+<div class="instructions">🔑 Use ARROW KEYS to move • Collect 5 KEYS to activate portal • Avoid enemies 🔴</div>
 <canvas id="gameCanvas" width="800" height="700"></canvas>
 <script>
 const canvas = document.getElementById("gameCanvas");
@@ -121,7 +121,7 @@ function handleMovement(key){
       if(k.x===player.x && k.y===player.y){ 
         keysCollected++; 
         score+=100;
-        levelMessage = `🔑 Key collected! ${3-keysCollected} keys remaining`;
+        levelMessage = `🔑 Key collected! ${5-keysCollected} keys remaining`;
         messageTimer = 60;
         return false;
       } 
@@ -140,7 +140,7 @@ function handleMovement(key){
   }
 }
 
-// Enhanced levels with more enemies
+// Enhanced levels with more enemies and diamonds
 let levels = [
   // Level 1
   {
@@ -166,8 +166,19 @@ let levels = [
       {x:10,y:9,floatX:10,floatY:9,speed:0.012,direction:1,moveTimer:0,color:'#ff6666'},
       {x:3,y:11,floatX:3,floatY:11,speed:0.018,direction:2,moveTimer:0,color:'#ff8888'}
     ],
-    keys:[{x:13,y:1,pulse:0},{x:1,y:13,pulse:0.5},{x:13,y:13,pulse:1}],
-    diamonds:[{x:8,y:7,rotation:0}],
+    keys:[{x:13,y:1,pulse:0},{x:1,y:13,pulse:0.5},{x:13,y:13,pulse:1},{x:7,y:3,pulse:1.5},{x:3,y:9,pulse:2}],
+    diamonds:[
+      {x:8,y:7,rotation:0},
+      {x:4,y:2,rotation:0.5},
+      {x:11,y:5,rotation:1},
+      {x:6,y:11,rotation:1.5},
+      {x:2,y:7,rotation:2},
+      {x:14,y:3,rotation:2.5},
+      {x:5,y:13,rotation:3},
+      {x:12,y:9,rotation:3.5},
+      {x:3,y:5,rotation:4},
+      {x:9,y:1,rotation:4.5}
+    ],
     portal:{x:14,y:13,pulse:1,active:false,particles:[]}
   },
   // Level 2
@@ -195,8 +206,20 @@ let levels = [
       {x:7,y:3,floatX:7,floatY:3,speed:0.019,direction:2,moveTimer:0,color:'#ff8888'},
       {x:2,y:9,floatX:2,floatY:9,speed:0.014,direction:3,moveTimer:0,color:'#ffaaaa'}
     ],
-    keys:[{x:1,y:13,pulse:0},{x:13,y:1,pulse:0.5},{x:7,y:7,pulse:1}],
-    diamonds:[{x:13,y:13,rotation:0},{x:3,y:3,rotation:1}],
+    keys:[{x:1,y:13,pulse:0},{x:13,y:1,pulse:0.5},{x:7,y:7,pulse:1},{x:3,y:3,pulse:1.5},{x:11,y:11,pulse:2}],
+    diamonds:[
+      {x:13,y:13,rotation:0},
+      {x:3,y:3,rotation:1},
+      {x:12,y:11,rotation:2},
+      {x:4,y:5,rotation:3},
+      {x:9,y:2,rotation:4},
+      {x:5,y:13,rotation:5},
+      {x:14,y:9,rotation:6},
+      {x:2,y:6,rotation:7},
+      {x:8,y:12,rotation:8},
+      {x:6,y:4,rotation:9},
+      {x:10,y:8,rotation:10}
+    ],
     portal:{x:14,y:13,pulse:1,active:false,particles:[]}
   },
   // Level 3
@@ -225,8 +248,21 @@ let levels = [
       {x:3,y:3,floatX:3,floatY:3,speed:0.015,direction:3,moveTimer:0,color:'#ffaaaa'},
       {x:12,y:6,floatX:12,floatY:6,speed:0.018,direction:0,moveTimer:0,color:'#ff2222'}
     ],
-    keys:[{x:1,y:13,pulse:0},{x:13,y:1,pulse:0.5},{x:8,y:5,pulse:1}],
-    diamonds:[{x:13,y:13,rotation:0},{x:1,y:1,rotation:1},{x:8,y:8,rotation:2}],
+    keys:[{x:1,y:13,pulse:0},{x:13,y:1,pulse:0.5},{x:8,y:5,pulse:1},{x:4,y:9,pulse:1.5},{x:12,y:7,pulse:2}],
+    diamonds:[
+      {x:13,y:13,rotation:0},
+      {x:1,y:1,rotation:1},
+      {x:8,y:8,rotation:2},
+      {x:3,y:7,rotation:3},
+      {x:14,y:9,rotation:4},
+      {x:6,y:2,rotation:5},
+      {x:11,y:11,rotation:6},
+      {x:2,y:5,rotation:7},
+      {x:9,y:13,rotation:8},
+      {x:5,y:3,rotation:9},
+      {x:10,y:6,rotation:10},
+      {x:7,y:12,rotation:11}
+    ],
     portal:{x:14,y:13,pulse:1,active:false,particles:[]}
   },
   // Level 4
@@ -256,8 +292,22 @@ let levels = [
       {x:12,y:3,floatX:12,floatY:3,speed:0.019,direction:0,moveTimer:0,color:'#ff2222'},
       {x:6,y:11,floatX:6,floatY:11,speed:0.017,direction:1,moveTimer:0,color:'#ff0000'}
     ],
-    keys:[{x:1,y:13,pulse:0},{x:13,y:1,pulse:0.5},{x:8,y:7,pulse:1}],
-    diamonds:[{x:13,y:13,rotation:0},{x:1,y:1,rotation:1},{x:4,y:4,rotation:2}],
+    keys:[{x:1,y:13,pulse:0},{x:13,y:1,pulse:0.5},{x:8,y:7,pulse:1},{x:3,y:11,pulse:1.5},{x:12,y:4,pulse:2}],
+    diamonds:[
+      {x:13,y:13,rotation:0},
+      {x:1,y:1,rotation:1},
+      {x:4,y:4,rotation:2},
+      {x:11,y:2,rotation:3},
+      {x:2,y:8,rotation:4},
+      {x:9,y:13,rotation:5},
+      {x:14,y:5,rotation:6},
+      {x:7,y:10,rotation:7},
+      {x:5,y:6,rotation:8},
+      {x:10,y:11,rotation:9},
+      {x:3,y:2,rotation:10},
+      {x:6,y:9,rotation:11},
+      {x:14,y:12,rotation:12}
+    ],
     portal:{x:14,y:13,pulse:1,active:false,particles:[]}
   },
   // Level 5
@@ -288,8 +338,23 @@ let levels = [
       {x:6,y:11,floatX:6,floatY:11,speed:0.018,direction:1,moveTimer:0,color:'#ff0000'},
       {x:9,y:5,floatX:9,floatY:5,speed:0.021,direction:2,moveTimer:0,color:'#cc0000'}
     ],
-    keys:[{x:1,y:13,pulse:0},{x:13,y:1,pulse:0.5},{x:8,y:7,pulse:1}],
-    diamonds:[{x:13,y:13,rotation:0},{x:1,y:1,rotation:1},{x:8,y:5,rotation:2}],
+    keys:[{x:1,y:13,pulse:0},{x:13,y:1,pulse:0.5},{x:8,y:7,pulse:1},{x:5,y:3,pulse:1.5},{x:11,y:9,pulse:2}],
+    diamonds:[
+      {x:13,y:13,rotation:0},
+      {x:1,y:1,rotation:1},
+      {x:8,y:5,rotation:2},
+      {x:4,y:9,rotation:3},
+      {x:11,y:12,rotation:4},
+      {x:3,y:4,rotation:5},
+      {x:14,y:7,rotation:6},
+      {x:6,y:13,rotation:7},
+      {x:9,y:2,rotation:8},
+      {x:2,y:10,rotation:9},
+      {x:12,y:6,rotation:10},
+      {x:7,y:11,rotation:11},
+      {x:10,y:4,rotation:12},
+      {x:5,y:8,rotation:13}
+    ],
     portal:{x:14,y:13,pulse:1,active:false,particles:[]}
   }
 ];
@@ -312,7 +377,7 @@ function resetLevel(){
   
   lvl.portal.active = false;
   lvl.portal.particles = [];
-  levelMessage = `🌟 Level ${currentLevel+1}: Collect 3 KEYS to activate the portal! 🌟`;
+  levelMessage = `🌟 Level ${currentLevel+1}: Collect 5 KEYS to activate the portal! 🌟`;
   messageTimer = 180;
 }
 
@@ -416,7 +481,7 @@ function portalPull(){
   let p = lvl.portal;
   
   // Activate portal when all keys collected
-  if(keysCollected >= 3 && !p.active){
+  if(        keysCollected >= 5 && !p.active){
     p.active = true;
     levelMessage = "🌀 PORTAL ACTIVATED! Enter to proceed! 🌀";
     messageTimer = 120;
@@ -508,7 +573,7 @@ function draw(){
   ctx.lineWidth = 4;
   ctx.strokeRect(mazeOffsetX-3, mazeOffsetY-3, 16*tileSize+6, 15*tileSize+6);
 
-  // Enhanced maze walls with colorful gradients
+  // Enhanced maze walls with colorful gradients - ALWAYS VISIBLE
   for(let y=0;y<maze.length;y++){
     for(let x=0;x<maze[y].length;x++){
       if(maze[y][x]===1){
@@ -527,6 +592,15 @@ function draw(){
         ctx.strokeStyle = '#6666aa';
         ctx.lineWidth = 1;
         ctx.strokeRect(mazeOffsetX + x*tileSize, mazeOffsetY + y*tileSize, tileSize, tileSize);
+      } else {
+        // Make empty spaces slightly visible with subtle floor pattern
+        ctx.fillStyle = 'rgba(20, 20, 30, 0.3)';
+        ctx.fillRect(mazeOffsetX + x*tileSize, mazeOffsetY + y*tileSize, tileSize, tileSize);
+        
+        // Subtle grid lines for empty spaces
+        ctx.strokeStyle = 'rgba(100, 100, 120, 0.2)';
+        ctx.lineWidth = 0.5;
+        ctx.strokeRect(mazeOffsetX + x*tileSize, mazeOffsetY + y*tileSize, tileSize, tileSize);
       }
     }
   }
@@ -543,7 +617,7 @@ function draw(){
     ctx.restore();
   });
 
-  // Enhanced keys with multi-color glow
+  // Enhanced keys with multi-color glow - ALWAYS VISIBLE
   lvl.keys.forEach((k,i)=>{
     k.pulse += 0.05;
     let glow = Math.sin(animationTime*3 + k.pulse) * 0.4 + 0.6;
@@ -567,7 +641,7 @@ function draw(){
     ctx.restore();
   });
 
-  // Enhanced diamonds with rainbow effect
+  // Enhanced diamonds with rainbow effect - ALWAYS VISIBLE
   lvl.diamonds.forEach((d,i)=>{
     d.rotation += 0.02;
     let sparkle = Math.sin(animationTime*4 + i*2) * 0.4 + 0.6;
@@ -655,8 +729,8 @@ function draw(){
     ctx.restore();
     
   } else {
-    // Inactive portal
-    ctx.strokeStyle = "rgba(100,50,100,0.6)";
+    // Inactive portal - ALWAYS VISIBLE
+    ctx.strokeStyle = "rgba(100,50,100,0.8)";
     ctx.lineWidth = 2;
     ctx.setLineDash([5, 5]);
     ctx.beginPath();
@@ -754,7 +828,7 @@ function draw(){
   keysGradient.addColorStop(0, '#ffaa00');
   keysGradient.addColorStop(1, '#ff6600');
   ctx.fillStyle = keysGradient;
-  ctx.fillText(`🔑 KEYS: ${keysCollected}/3`, 250, 35);
+  ctx.fillText(`🔑 KEYS: ${keysCollected}/5`, 250, 35);
   
   // Score indicator
   let scoreGradient = ctx.createLinearGradient(0, 0, 200, 0);
@@ -764,7 +838,7 @@ function draw(){
   ctx.fillText(`💎 SCORE: ${score}`, 450, 35);
   
   // Portal status indicator
-  if(keysCollected >= 3){
+  if(keysCollected >= 5){
     ctx.save();
     let portalGlow = Math.sin(animationTime*8) * 0.5 + 0.5;
     ctx.fillStyle = `rgba(255,0,255,${0.7 + portalGlow*0.3})`;
@@ -778,7 +852,7 @@ function draw(){
   // Game instructions at bottom
   ctx.fillStyle = 'rgba(255,255,255,0.7)';
   ctx.font = "16px Courier New";
-  ctx.fillText("Use ARROW KEYS to move • Collect all 3 KEYS • Avoid RED enemies", 50, canvas.height - 20);
+  ctx.fillText("Use ARROW KEYS to move • Collect all 5 KEYS • Avoid RED enemies", 50, canvas.height - 20);
 
   // Enhanced messages - positioned in center of maze area
   if(messageTimer>0){
@@ -804,40 +878,138 @@ function draw(){
     messageTimer--;
   }
 
-  // Enhanced start screen
+  // Enhanced start screen with detailed information page
   if(!gameStarted){
     ctx.save();
-    ctx.fillStyle = "rgba(0,0,0,0.85)";
+    ctx.fillStyle = "rgba(0,0,0,0.9)";
     ctx.fillRect(0,0,canvas.width,canvas.height);
     
-    // Animated title
-    let titleHue = (animationTime * 60) % 360;
-    ctx.fillStyle = `hsl(${titleHue}, 100%, 70%)`;
-    ctx.font = "bold 36px Courier New";
-    ctx.shadowColor = `hsl(${titleHue}, 100%, 50%)`;
-    ctx.shadowBlur = 25;
-    let msg = "✨ PRESS ENTER TO START ✨";
-    let textWidth = ctx.measureText(msg).width;
-    ctx.fillText(msg, (canvas.width - textWidth)/2, canvas.height/2);
+    // Game title with animated rainbow effect
+    let titleHue = (animationTime * 80) % 360;
+    ctx.fillStyle = `hsl(${titleHue}, 100%, 80%)`;
+    ctx.font = "bold 48px Courier New";
+    ctx.shadowColor = `hsl(${titleHue}, 100%, 60%)`;
+    ctx.shadowBlur = 30;
+    let gameTitle = "✨ ESCAPE THE LOOP ✨";
+    let titleWidth = ctx.measureText(gameTitle).width;
+    ctx.fillText(gameTitle, (canvas.width - titleWidth)/2, 80);
     
-    // Colorful instructions
-    ctx.font = "20px Courier New";
-    let instructions = [
-      "🎮 Use ARROW KEYS to move one square at a time",
-      "🔑 Collect 3 KEYS to activate the portal",
-      "🔴 Avoid enemies - they follow maze paths!",
-      "💎 Collect DIAMONDS for bonus points",
-      "🌀 Enter the PORTAL to advance levels"
+    // Subtitle
+    ctx.fillStyle = `hsl(${(titleHue + 60) % 360}, 100%, 70%)`;
+    ctx.font = "bold 24px Courier New";
+    ctx.shadowBlur = 15;
+    let subtitle = "Enhanced Maze Adventure Game";
+    let subtitleWidth = ctx.measureText(subtitle).width;
+    ctx.fillText(subtitle, (canvas.width - subtitleWidth)/2, 120);
+    
+    // Information sections
+    let yPos = 170;
+    
+    // Objective section
+    ctx.fillStyle = `hsl(${(titleHue + 120) % 360}, 100%, 75%)`;
+    ctx.font = "bold 22px Courier New";
+    ctx.shadowBlur = 12;
+    let objective = "🎯 OBJECTIVE";
+    let objWidth = ctx.measureText(objective).width;
+    ctx.fillText(objective, (canvas.width - objWidth)/2, yPos);
+    
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.font = "18px Courier New";
+    ctx.shadowBlur = 5;
+    let objText = "Navigate through 5 challenging maze levels and escape!";
+    let objTextWidth = ctx.measureText(objText).width;
+    ctx.fillText(objText, (canvas.width - objTextWidth)/2, yPos + 30);
+    
+    yPos += 70;
+    
+    // Controls section
+    ctx.fillStyle = `hsl(${(titleHue + 180) % 360}, 100%, 75%)`;
+    ctx.font = "bold 22px Courier New";
+    ctx.shadowBlur = 12;
+    let controls = "🎮 CONTROLS";
+    let controlsWidth = ctx.measureText(controls).width;
+    ctx.fillText(controls, (canvas.width - controlsWidth)/2, yPos);
+    
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.font = "16px Courier New";
+    ctx.shadowBlur = 5;
+    let controlInstructions = [
+      "🔸 ARROW KEYS - Move your character through the maze",
+      "🔸 R KEY - Restart the game at any time"
     ];
     
-    instructions.forEach((instruction, i) => {
-      let instrHue = (titleHue + i * 60) % 360;
-      ctx.fillStyle = `hsl(${instrHue}, 100%, 80%)`;
-      ctx.shadowColor = `hsl(${instrHue}, 100%, 60%)`;
-      ctx.shadowBlur = 10;
+    controlInstructions.forEach((instruction, i) => {
       let instrWidth = ctx.measureText(instruction).width;
-      ctx.fillText(instruction, (canvas.width - instrWidth)/2, canvas.height/2 + 70 + i*30);
+      ctx.fillText(instruction, (canvas.width - instrWidth)/2, yPos + 35 + i*25);
     });
+    
+    yPos += 120;
+    
+    // Game elements section
+    ctx.fillStyle = `hsl(${(titleHue + 240) % 360}, 100%, 75%)`;
+    ctx.font = "bold 22px Courier New";
+    ctx.shadowBlur = 12;
+    let elements = "🎲 GAME ELEMENTS";
+    let elementsWidth = ctx.measureText(elements).width;
+    ctx.fillText(elements, (canvas.width - elementsWidth)/2, yPos);
+    
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.font = "16px Courier New";
+    ctx.shadowBlur = 5;
+    let gameElements = [
+      "🔑 KEYS (5 per level) - Collect all to activate the portal",
+      "💎 DIAMONDS - Bonus points scattered throughout each level",
+      "🔴 ENEMIES - Smart AI that patrol maze paths - AVOID THEM!",
+      "🌀 PORTAL - Your escape route to the next level"
+    ];
+    
+    gameElements.forEach((element, i) => {
+      let elementWidth = ctx.measureText(element).width;
+      ctx.fillText(element, (canvas.width - elementWidth)/2, yPos + 35 + i*25);
+    });
+    
+    yPos += 140;
+    
+    // Scoring section
+    ctx.fillStyle = `hsl(${(titleHue + 300) % 360}, 100%, 75%)`;
+    ctx.font = "bold 22px Courier New";
+    ctx.shadowBlur = 12;
+    let scoring = "🏆 SCORING";
+    let scoringWidth = ctx.measureText(scoring).width;
+    ctx.fillText(scoring, (canvas.width - scoringWidth)/2, yPos);
+    
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.font = "16px Courier New";
+    ctx.shadowBlur = 5;
+    let scoreInfo = [
+      "🔸 Each KEY collected: +100 points",
+      "🔸 Each DIAMOND collected: +500 points",
+      "🔸 Each level completed: +1000 bonus points"
+    ];
+    
+    scoreInfo.forEach((info, i) => {
+      let infoWidth = ctx.measureText(info).width;
+      ctx.fillText(info, (canvas.width - infoWidth)/2, yPos + 35 + i*25);
+    });
+    
+    // Pulsing start prompt
+    let startPulse = Math.sin(animationTime * 4) * 0.4 + 0.8;
+    ctx.fillStyle = `hsla(${titleHue}, 100%, 85%, ${startPulse})`;
+    ctx.font = "bold 32px Courier New";
+    ctx.shadowColor = `hsl(${titleHue}, 100%, 70%)`;
+    ctx.shadowBlur = 25 * startPulse;
+    let startMsg = "⚡ PRESS ENTER TO BEGIN YOUR ADVENTURE! ⚡";
+    let startWidth = ctx.measureText(startMsg).width;
+    ctx.fillText(startMsg, (canvas.width - startWidth)/2, canvas.height - 50);
+    
+    // Fun fact at the bottom
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.font = "14px Courier New";
+    ctx.shadowBlur = 3;
+    let funFact = "💡 Tip: The entire maze layout is visible - plan your route carefully!";
+    let factWidth = ctx.measureText(funFact).width;
+    ctx.fillText(funFact, (canvas.width - factWidth)/2, canvas.height - 20);
+    
     ctx.restore();
   }
 
@@ -942,6 +1114,3 @@ function loop(){
 
 // Start the game
 loop();
-</script>
-</body>
-</html>
