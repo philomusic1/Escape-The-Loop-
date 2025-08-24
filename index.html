@@ -1,18 +1,51 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Escape The Loop</title>
+  <title>Escape The Loop - Enhanced Edition</title>
   <style>
-    body { margin:0; background:black; color:white; text-align:center; }
-    canvas { background:#111; display:block; margin:20px auto; border:3px solid white; }
+    body { 
+      margin:0; 
+      background: linear-gradient(135deg, #0a0a0a, #1a1a2e, #16213e); 
+      color:white; 
+      text-align:center; 
+      font-family: 'Courier New', monospace;
+      overflow: hidden;
+    }
+    canvas { 
+      background: linear-gradient(45deg, #111, #222, #333); 
+      display:block; 
+      margin:10px auto; 
+      border: 5px solid #00ff88;
+      box-shadow: 0 0 40px rgba(0, 255, 136, 0.6), inset 0 0 20px rgba(255, 0, 255, 0.2);
+      border-radius: 15px;
+      max-width: 90vw;
+      max-height: 85vh;
+    }
+    .title {
+      font-size: 32px;
+      color: #00ff88;
+      text-shadow: 0 0 25px rgba(0, 255, 136, 1), 0 0 50px rgba(255, 0, 255, 0.5);
+      margin: 10px 0;
+      font-weight: bold;
+    }
+    .instructions {
+      font-size: 18px;
+      color: #ffaa00;
+      margin: 5px 0;
+      text-shadow: 0 0 10px rgba(255, 170, 0, 0.8);
+    }
   </style>
 </head>
 <body>
-<canvas id="gameCanvas" width="640" height="480"></canvas>
+<div class="title">✨ ESCAPE THE LOOP ✨</div>
+<div class="instructions">🔑 Use ARROW KEYS to move • Collect 3 KEYS to activate portal • Avoid enemies 🔴</div>
+<canvas id="gameCanvas" width="800" height="700"></canvas>
 <script>
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
-const tileSize = 40;
+const tileSize = 45; // Increased tile size for better visibility
+const mazeOffsetX = 40; // More padding to center the maze
+const mazeOffsetY = 80; // More space for HUD at top
 
 let gameStarted = false;
 let gameOver = false;
@@ -24,20 +57,90 @@ let messageTimer = 0;
 let levelMessage = "";
 let transitioning = false;
 let transitionProgress = 0;
+let animationTime = 0;
+let moveDelay = 0;
+const MOVE_COOLDOWN = 8;
 
-// Player
-let player = {x:1,y:1,floatX:1,floatY:1,angle:0,scale:1};
+// Enhanced player with more properties
+let player = {
+  x:1, y:1, targetX:1, targetY:1, floatX:1, floatY:1, 
+  angle:0, scale:1, moving:false, trail:[]
+};
 
 // Controls
-let keysDown = {};
+let keysPressed = {};
 document.addEventListener("keydown", e=>{
-  keysDown[e.key]=true;
-  if(e.key==="Enter" && !gameStarted){ gameStarted=true; resetLevel(); }
-  if(e.key==="r" || e.key==="R"){ restartGame(); }
+  if(e.key==="Enter" && !gameStarted){ 
+    gameStarted=true; 
+    resetLevel(); 
+    return;
+  }
+  if(e.key==="r" || e.key==="R"){ 
+    restartGame(); 
+    return;
+  }
+  
+  if(!keysPressed[e.key] && moveDelay <= 0){
+    keysPressed[e.key] = true;
+    handleMovement(e.key);
+  }
 });
-document.addEventListener("keyup", e=>{ delete keysDown[e.key]; });
 
-// --- Levels --- //
+document.addEventListener("keyup", e=>{ 
+  delete keysPressed[e.key]; 
+});
+
+// Handle movement
+function handleMovement(key){
+  if(gameOver || !gameStarted || messageTimer>0 || victory || transitioning || player.moving) return;
+  
+  let dx=0,dy=0;
+  if(key==="ArrowUp") dy=-1;
+  if(key==="ArrowDown") dy=1;
+  if(key==="ArrowLeft") dx=-1;
+  if(key==="ArrowRight") dx=1;
+  
+  if(dx===0 && dy===0) return;
+  
+  let nx=player.x+dx, ny=player.y+dy;
+  let maze = levels[currentLevel].maze;
+  
+  if(maze[ny] && maze[ny][nx]===0){
+    // Add to trail
+    player.trail.push({x: player.floatX, y: player.floatY, life: 20});
+    if(player.trail.length > 10) player.trail.shift();
+    
+    player.x=nx; player.y=ny;
+    player.targetX=nx; player.targetY=ny;
+    player.moving = true;
+    moveDelay = MOVE_COOLDOWN;
+    
+    // Check collectibles
+    let lvl = levels[currentLevel];
+    lvl.keys = lvl.keys.filter(k=>{
+      if(k.x===player.x && k.y===player.y){ 
+        keysCollected++; 
+        score+=100;
+        levelMessage = `🔑 Key collected! ${3-keysCollected} keys remaining`;
+        messageTimer = 60;
+        return false;
+      } 
+      return true;
+    });
+    
+    lvl.diamonds = lvl.diamonds.filter(d=>{
+      if(d.x===player.x && d.y===player.y){ 
+        score+=500;
+        levelMessage = "💎 Diamond collected! +500 points";
+        messageTimer = 60;
+        return false;
+      } 
+      return true;
+    });
+  }
+}
+
+// Enhanced levels with more enemies
 let levels = [
   // Level 1
   {
@@ -58,10 +161,14 @@ let levels = [
       [1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
     ],
-    enemies:[{x:5,y:5,floatX:5,floatY:5,speed:0.03}],
-    keys:[{x:13,y:1}],
-    diamonds:[{x:13,y:13}],
-    portal:{x:14,y:13,pulse:1}
+    enemies:[
+      {x:5,y:5,floatX:5,floatY:5,speed:0.015,direction:0,moveTimer:0,color:'#ff4444'},
+      {x:10,y:9,floatX:10,floatY:9,speed:0.012,direction:1,moveTimer:0,color:'#ff6666'},
+      {x:3,y:11,floatX:3,floatY:11,speed:0.018,direction:2,moveTimer:0,color:'#ff8888'}
+    ],
+    keys:[{x:13,y:1,pulse:0},{x:1,y:13,pulse:0.5},{x:13,y:13,pulse:1}],
+    diamonds:[{x:8,y:7,rotation:0}],
+    portal:{x:14,y:13,pulse:1,active:false,particles:[]}
   },
   // Level 2
   {
@@ -83,12 +190,14 @@ let levels = [
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
     ],
     enemies:[
-      {x:5,y:5,floatX:5,floatY:5,speed:0.035},
-      {x:10,y:10,floatX:10,floatY:10,speed:0.035}
+      {x:5,y:5,floatX:5,floatY:5,speed:0.016,direction:0,moveTimer:0,color:'#ff4444'},
+      {x:10,y:10,floatX:10,floatY:10,speed:0.013,direction:1,moveTimer:0,color:'#ff6666'},
+      {x:7,y:3,floatX:7,floatY:3,speed:0.019,direction:2,moveTimer:0,color:'#ff8888'},
+      {x:2,y:9,floatX:2,floatY:9,speed:0.014,direction:3,moveTimer:0,color:'#ffaaaa'}
     ],
-    keys:[{x:1,y:13},{x:13,y:1}],
-    diamonds:[{x:13,y:13}],
-    portal:{x:14,y:13,pulse:1}
+    keys:[{x:1,y:13,pulse:0},{x:13,y:1,pulse:0.5},{x:7,y:7,pulse:1}],
+    diamonds:[{x:13,y:13,rotation:0},{x:3,y:3,rotation:1}],
+    portal:{x:14,y:13,pulse:1,active:false,particles:[]}
   },
   // Level 3
   {
@@ -110,13 +219,15 @@ let levels = [
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
     ],
     enemies:[
-      {x:5,y:5,floatX:5,floatY:5,speed:0.04},
-      {x:10,y:10,floatX:10,floatY:10,speed:0.04},
-      {x:7,y:8,floatX:7,floatY:8,speed:0.04}
+      {x:5,y:5,floatX:5,floatY:5,speed:0.017,direction:0,moveTimer:0,color:'#ff4444'},
+      {x:10,y:10,floatX:10,floatY:10,speed:0.014,direction:1,moveTimer:0,color:'#ff6666'},
+      {x:7,y:8,floatX:7,floatY:8,speed:0.020,direction:2,moveTimer:0,color:'#ff8888'},
+      {x:3,y:3,floatX:3,floatY:3,speed:0.015,direction:3,moveTimer:0,color:'#ffaaaa'},
+      {x:12,y:6,floatX:12,floatY:6,speed:0.018,direction:0,moveTimer:0,color:'#ff2222'}
     ],
-    keys:[{x:1,y:13},{x:13,y:1}],
-    diamonds:[{x:13,y:13},{x:1,y:1}],
-    portal:{x:14,y:13,pulse:1}
+    keys:[{x:1,y:13,pulse:0},{x:13,y:1,pulse:0.5},{x:8,y:5,pulse:1}],
+    diamonds:[{x:13,y:13,rotation:0},{x:1,y:1,rotation:1},{x:8,y:8,rotation:2}],
+    portal:{x:14,y:13,pulse:1,active:false,particles:[]}
   },
   // Level 4
   {
@@ -138,14 +249,16 @@ let levels = [
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
     ],
     enemies:[
-      {x:5,y:5,floatX:5,floatY:5,speed:0.045},
-      {x:10,y:10,floatX:10,floatY:10,speed:0.045},
-      {x:7,y:8,floatX:7,floatY:8,speed:0.045},
-      {x:3,y:12,floatX:3,floatY:12,speed:0.045}
+      {x:5,y:5,floatX:5,floatY:5,speed:0.018,direction:0,moveTimer:0,color:'#ff4444'},
+      {x:10,y:10,floatX:10,floatY:10,speed:0.015,direction:1,moveTimer:0,color:'#ff6666'},
+      {x:7,y:8,floatX:7,floatY:8,speed:0.021,direction:2,moveTimer:0,color:'#ff8888'},
+      {x:3,y:12,floatX:3,floatY:12,speed:0.016,direction:3,moveTimer:0,color:'#ffaaaa'},
+      {x:12,y:3,floatX:12,floatY:3,speed:0.019,direction:0,moveTimer:0,color:'#ff2222'},
+      {x:6,y:11,floatX:6,floatY:11,speed:0.017,direction:1,moveTimer:0,color:'#ff0000'}
     ],
-    keys:[{x:1,y:13},{x:13,y:1},{x:8,y:7}],
-    diamonds:[{x:13,y:13},{x:1,y:1}],
-    portal:{x:14,y:13,pulse:1}
+    keys:[{x:1,y:13,pulse:0},{x:13,y:1,pulse:0.5},{x:8,y:7,pulse:1}],
+    diamonds:[{x:13,y:13,rotation:0},{x:1,y:1,rotation:1},{x:4,y:4,rotation:2}],
+    portal:{x:14,y:13,pulse:1,active:false,particles:[]}
   },
   // Level 5
   {
@@ -167,214 +280,658 @@ let levels = [
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
     ],
     enemies:[
-      {x:5,y:5,floatX:5,floatY:5,speed:0.05},
-      {x:10,y:10,floatX:10,floatY:10,speed:0.05},
-      {x:7,y:8,floatX:7,floatY:8,speed:0.05},
-      {x:3,y:12,floatX:3,floatY:12,speed:0.05},
-      {x:12,y:3,floatX:12,floatY:3,speed:0.05}
+      {x:5,y:5,floatX:5,floatY:5,speed:0.019,direction:0,moveTimer:0,color:'#ff4444'},
+      {x:10,y:10,floatX:10,floatY:10,speed:0.016,direction:1,moveTimer:0,color:'#ff6666'},
+      {x:7,y:8,floatX:7,floatY:8,speed:0.022,direction:2,moveTimer:0,color:'#ff8888'},
+      {x:3,y:12,floatX:3,floatY:12,speed:0.017,direction:3,moveTimer:0,color:'#ffaaaa'},
+      {x:12,y:3,floatX:12,floatY:3,speed:0.020,direction:0,moveTimer:0,color:'#ff2222'},
+      {x:6,y:11,floatX:6,floatY:11,speed:0.018,direction:1,moveTimer:0,color:'#ff0000'},
+      {x:9,y:5,floatX:9,floatY:5,speed:0.021,direction:2,moveTimer:0,color:'#cc0000'}
     ],
-    keys:[{x:1,y:13},{x:13,y:1},{x:8,y:7}],
-    diamonds:[{x:13,y:13},{x:1,y:1},{x:8,y:5}],
-    portal:{x:14,y:13,pulse:1}
+    keys:[{x:1,y:13,pulse:0},{x:13,y:1,pulse:0.5},{x:8,y:7,pulse:1}],
+    diamonds:[{x:13,y:13,rotation:0},{x:1,y:1,rotation:1},{x:8,y:5,rotation:2}],
+    portal:{x:14,y:13,pulse:1,active:false,particles:[]}
   }
 ];
 
-// --- Functions --- //
 // Reset level
 function resetLevel(){
   let lvl = levels[currentLevel];
-  player.x=1; player.y=1; player.floatX=1; player.floatY=1; player.angle=0; player.scale=1;
+  player.x=1; player.y=1; player.floatX=1; player.floatY=1; 
+  player.targetX=1; player.targetY=1; player.angle=0; player.scale=1; player.moving=false;
+  player.trail = [];
   keysCollected=0; gameOver=false; victory=false; transitioning=false; transitionProgress=0;
-  lvl.enemies.forEach(e=>{ e.floatX=e.x; e.floatY=e.y; });
-  levelMessage = `Level ${currentLevel+1}: Collect keys & diamonds, reach the portal!`;
+  moveDelay = 0;
+  
+  // Reset enemies with random positions
+  lvl.enemies.forEach(e=>{
+    e.floatX=e.x; e.floatY=e.y; 
+    e.direction = Math.floor(Math.random() * 4);
+    e.moveTimer = Math.random() * 60;
+  });
+  
+  lvl.portal.active = false;
+  lvl.portal.particles = [];
+  levelMessage = `🌟 Level ${currentLevel+1}: Collect 3 KEYS to activate the portal! 🌟`;
   messageTimer = 180;
 }
 
 // Restart game
 function restartGame(){
-  currentLevel = 0;
-  score = 0;
-  victory = false;
-  gameStarted = false;
-  gameOver = false;
-  transitionProgress = 0;
-
-  player.x=1; player.y=1; player.floatX=1; player.floatY=1; player.angle=0; player.scale=1;
-
+  currentLevel = 0; score = 0; victory = false; gameStarted = false;
+  gameOver = false; transitionProgress = 0; animationTime = 0;
+  player.x=1; player.y=1; player.floatX=1; player.floatY=1; 
+  player.targetX=1; player.targetY=1; player.angle=0; player.scale=1; player.moving=false;
+  player.trail = [];
   levels.forEach(level=>{
-    level.enemies.forEach(e=>{ e.floatX=e.x; e.floatY=e.y; });
+    level.enemies.forEach(e=>{ e.floatX=e.x; e.floatY=e.y; e.direction=Math.floor(Math.random()*4); });
+    level.portal.active = false;
+    level.portal.particles = [];
   });
-
-  keysCollected=0;
-  messageTimer=0;
-  levelMessage="";
+  keysCollected=0; messageTimer=0; levelMessage=""; moveDelay = 0;
 }
 
-// Player movement
-function movePlayer(){
-  if(gameOver || !gameStarted || messageTimer>0 || victory || transitioning) return;
-  let dx=0,dy=0;
-  if(keysDown["ArrowUp"]) dy=-1;
-  if(keysDown["ArrowDown"]) dy=1;
-  if(keysDown["ArrowLeft"]) dx=-1;
-  if(keysDown["ArrowRight"]) dx=1;
-
-  let nx=player.x+dx, ny=player.y+dy;
-  let maze = levels[currentLevel].maze;
-  if(maze[ny] && maze[ny][nx]===0){ player.x=nx; player.y=ny; player.floatX=nx; player.floatY=ny; }
-
-  let lvl = levels[currentLevel];
-  lvl.keys = lvl.keys.filter(k=>{ if(k.x===player.x && k.y===player.y){ keysCollected++; score+=100; return false;} return true; });
-  lvl.diamonds = lvl.diamonds.filter(d=>{ if(d.x===player.x && d.y===player.y){ score+=500; return false;} return true; });
+// Update player with trail
+function updatePlayer(){
+  if(player.moving){
+    let dx = player.targetX - player.floatX;
+    let dy = player.targetY - player.floatY;
+    let speed = 0.25;
+    
+    player.floatX += dx * speed;
+    player.floatY += dy * speed;
+    
+    if(Math.abs(dx) < 0.1 && Math.abs(dy) < 0.1){
+      player.floatX = player.targetX;
+      player.floatY = player.targetY;
+      player.moving = false;
+    }
+  }
+  
+  // Update trail
+  player.trail.forEach(t => t.life--);
+  player.trail = player.trail.filter(t => t.life > 0);
+  
+  if(moveDelay > 0) moveDelay--;
 }
 
-// Enemy movement
+// Smart enemy movement that follows maze paths
 function moveEnemiesSmooth(){
   let lvl = levels[currentLevel];
+  let maze = lvl.maze;
+  
   lvl.enemies.forEach(e=>{
-    if(e.floatX < player.x) e.floatX += e.speed;
-    if(e.floatX > player.x) e.floatX -= e.speed;
-    if(e.floatY < player.y) e.floatY += e.speed;
-    if(e.floatY > player.y) e.floatY -= e.speed;
+    e.moveTimer++;
+    
+    // Change direction randomly or when hitting walls
+    if(e.moveTimer > 60 + Math.random() * 120){
+      let validDirections = [];
+      let directions = [{x:0,y:-1}, {x:1,y:0}, {x:0,y:1}, {x:-1,y:0}]; // Up, Right, Down, Left
+      
+      directions.forEach((dir, index) => {
+        let checkX = Math.floor(e.floatX + dir.x);
+        let checkY = Math.floor(e.floatY + dir.y);
+        if(maze[checkY] && maze[checkY][checkX] === 0){
+          validDirections.push(index);
+        }
+      });
+      
+      if(validDirections.length > 0){
+        e.direction = validDirections[Math.floor(Math.random() * validDirections.length)];
+      }
+      e.moveTimer = 0;
+    }
+    
+    // Move in current direction
+    let directions = [{x:0,y:-1}, {x:1,y:0}, {x:0,y:1}, {x:-1,y:0}];
+    let dir = directions[e.direction];
+    let nextX = e.floatX + dir.x * e.speed;
+    let nextY = e.floatY + dir.y * e.speed;
+    
+    // Check if next position is valid
+    if(maze[Math.floor(nextY)] && maze[Math.floor(nextY)][Math.floor(nextX)] === 0){
+      e.floatX = nextX;
+      e.floatY = nextY;
+    } else {
+      // Hit wall, change direction immediately
+      e.moveTimer = 100;
+    }
+    
     e.x = Math.round(e.floatX);
     e.y = Math.round(e.floatY);
-    if(e.x === player.x && e.y === player.y){
+    
+    // Check collision with player
+    if(Math.abs(e.floatX - player.floatX) < 0.7 && Math.abs(e.floatY - player.floatY) < 0.7){
       gameOver = true;
-      levelMessage = "You got caught! Press R to restart";
-      messageTimer = 180;
+      levelMessage = "💀 CAUGHT! Press R to restart 💀";
+      messageTimer = 300;
     }
   });
 }
 
-// Portal pull
+// Enhanced portal with particles
 function portalPull(){
   if(transitioning) return;
   let lvl = levels[currentLevel];
   let p = lvl.portal;
+  
+  // Activate portal when all keys collected
+  if(keysCollected >= 3 && !p.active){
+    p.active = true;
+    levelMessage = "🌀 PORTAL ACTIVATED! Enter to proceed! 🌀";
+    messageTimer = 120;
+    
+    // Initialize particles
+    for(let i = 0; i < 20; i++){
+      p.particles.push({
+        angle: (i / 20) * Math.PI * 2,
+        radius: 30 + Math.random() * 20,
+        speed: 0.02 + Math.random() * 0.01,
+        life: 1
+      });
+    }
+  }
+  
+  if(!p.active) return;
+  
+  // Update particles
+  p.particles.forEach(particle => {
+    particle.angle += particle.speed;
+    particle.radius *= 0.995;
+    if(particle.radius < 5) particle.radius = 50;
+  });
+  
   let dx = (p.x+0.5) - player.floatX;
   let dy = (p.y+0.5) - player.floatY;
   let dist = Math.sqrt(dx*dx + dy*dy);
-  if(dist < 2){
-    let pull = 0.02 + (2 - dist) * 0.03;
+  
+  if(dist < 3.5){
+    let pull = 0.012 + (3.5 - dist) * 0.018;
     player.floatX += dx * pull;
     player.floatY += dy * pull;
+    player.targetX = player.floatX;
+    player.targetY = player.floatY;
     player.x = Math.round(player.floatX);
     player.y = Math.round(player.floatY);
-    player.angle += 0.2 + (2 - dist) * 0.2;
-    player.scale = Math.max(0.2, dist / 2);
-    p.pulse = 1 + (2 - dist) * 0.2;
-    if(dist < 0.2 && lvl.keys.length === 0){ transitioning = true; transitionProgress = 0; }
-  } else { player.angle = 0; player.scale = 1; p.pulse = 1; }
+    player.angle += 0.08 + (3.5 - dist) * 0.12;
+    player.scale = Math.max(0.3, dist / 3.5);
+    p.pulse = 1 + (3.5 - dist) * 0.4;
+    
+    if(dist < 0.4){
+      transitioning = true;
+      transitionProgress = 0;
+    }
+  } else {
+    player.angle *= 0.95;
+    if(Math.abs(player.angle) < 0.1) player.angle = 0;
+    player.scale = Math.min(1, player.scale + 0.05);
+    p.pulse = Math.max(1, p.pulse - 0.02);
+  }
 }
 
 // Handle transition
 function handleTransition(){
   if(!transitioning) return;
-  transitionProgress += 0.03;
+  transitionProgress += 0.025;
+  
   if(transitionProgress>=1){
     transitioning = false;
     currentLevel++;
     if(currentLevel >= levels.length){
       victory=true;
-      levelMessage="You escaped the loop!";
+      levelMessage="🎉✨ ULTIMATE VICTORY! You escaped all loops! ✨🎉";
       messageTimer=600;
     } else {
+      score += 1000;
       resetLevel();
     }
   }
 }
 
-// Draw everything
+// Enhanced drawing with better colors and effects
 function draw(){
+  animationTime += 0.02;
   ctx.clearRect(0,0,canvas.width,canvas.height);
+  
   let maze = levels[currentLevel].maze;
   let lvl = levels[currentLevel];
 
-  // Maze with border
+  // Enhanced maze border with rainbow effect
+  let borderGradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  borderGradient.addColorStop(0, '#00ff88');
+  borderGradient.addColorStop(0.25, '#0088ff');
+  borderGradient.addColorStop(0.5, '#ff00ff');
+  borderGradient.addColorStop(0.75, '#ffaa00');
+  borderGradient.addColorStop(1, '#00ff88');
+  
+  ctx.strokeStyle = borderGradient;
+  ctx.lineWidth = 4;
+  ctx.strokeRect(mazeOffsetX-3, mazeOffsetY-3, 16*tileSize+6, 15*tileSize+6);
+
+  // Enhanced maze walls with colorful gradients
   for(let y=0;y<maze.length;y++){
     for(let x=0;x<maze[y].length;x++){
       if(maze[y][x]===1){
-        ctx.fillStyle="gray"; 
-        ctx.fillRect(x*tileSize,y*tileSize,tileSize,tileSize);
-        ctx.strokeStyle="white";
-        ctx.strokeRect(x*tileSize,y*tileSize,tileSize,tileSize);
+        let wallGradient = ctx.createLinearGradient(
+          mazeOffsetX + x*tileSize, mazeOffsetY + y*tileSize,
+          mazeOffsetX + x*tileSize + tileSize, mazeOffsetY + y*tileSize + tileSize
+        );
+        wallGradient.addColorStop(0, '#333366');
+        wallGradient.addColorStop(0.5, '#444477');
+        wallGradient.addColorStop(1, '#555588');
+        
+        ctx.fillStyle = wallGradient;
+        ctx.fillRect(mazeOffsetX + x*tileSize, mazeOffsetY + y*tileSize, tileSize, tileSize);
+        
+        // Wall border with subtle glow
+        ctx.strokeStyle = '#6666aa';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(mazeOffsetX + x*tileSize, mazeOffsetY + y*tileSize, tileSize, tileSize);
       }
     }
   }
 
-  // Keys
-  ctx.fillStyle="yellow";
-  lvl.keys.forEach(k=>ctx.fillRect(k.x*tileSize+10,k.y*tileSize+10,20,20));
-
-  // Diamonds
-  ctx.fillStyle="cyan";
-  lvl.diamonds.forEach(d=>{
-    ctx.beginPath();
-    ctx.moveTo(d.x*tileSize+20,d.y*tileSize);
-    ctx.lineTo(d.x*tileSize+40,d.y*tileSize+20);
-    ctx.lineTo(d.x*tileSize+20,d.y*tileSize+40);
-    ctx.lineTo(d.x*tileSize,d.y*tileSize+20);
-    ctx.closePath();
-    ctx.fill();
+  // Player trail effect
+  player.trail.forEach((t, i) => {
+    let alpha = t.life / 20;
+    ctx.save();
+    ctx.globalAlpha = alpha * 0.6;
+    ctx.fillStyle = '#00ffff';
+    ctx.shadowColor = '#00ffff';
+    ctx.shadowBlur = 10;
+    ctx.fillRect(mazeOffsetX + t.x*tileSize+16, mazeOffsetY + t.y*tileSize+16, 8, 8);
+    ctx.restore();
   });
 
-  // Portal vortex
+  // Enhanced keys with multi-color glow
+  lvl.keys.forEach((k,i)=>{
+    k.pulse += 0.05;
+    let glow = Math.sin(animationTime*3 + k.pulse) * 0.4 + 0.6;
+    let hue = (animationTime * 50 + i * 120) % 360;
+    
+    ctx.save();
+    ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
+    ctx.shadowBlur = 20 * glow;
+    ctx.fillStyle = `hsl(${hue}, 100%, ${50 + glow*30}%)`;
+    
+    // Key shape
+    let keyX = mazeOffsetX + k.x*tileSize+20;
+    let keyY = mazeOffsetY + k.y*tileSize+20;
+    ctx.translate(keyX, keyY);
+    ctx.scale(1 + glow*0.2, 1 + glow*0.2);
+    
+    // Draw key
+    ctx.fillRect(-8, -4, 12, 8);
+    ctx.fillRect(4, -6, 4, 4);
+    ctx.fillRect(4, 2, 4, 4);
+    ctx.restore();
+  });
+
+  // Enhanced diamonds with rainbow effect
+  lvl.diamonds.forEach((d,i)=>{
+    d.rotation += 0.02;
+    let sparkle = Math.sin(animationTime*4 + i*2) * 0.4 + 0.6;
+    let hue = (animationTime * 100 + i * 60) % 360;
+    
+    ctx.save();
+    ctx.shadowColor = `hsl(${hue}, 100%, 70%)`;
+    ctx.shadowBlur = 25 * sparkle;
+    ctx.fillStyle = `hsl(${hue}, 100%, ${60 + sparkle*30}%)`;
+    ctx.translate(mazeOffsetX + d.x*tileSize+20, mazeOffsetY + d.y*tileSize+20);
+    ctx.rotate(d.rotation);
+    ctx.scale(1 + sparkle*0.3, 1 + sparkle*0.3);
+    
+    ctx.beginPath();
+    ctx.moveTo(0,-18);
+    ctx.lineTo(12, -6);
+    ctx.lineTo(18, 0);
+    ctx.lineTo(12, 6);
+    ctx.lineTo(0, 18);
+    ctx.lineTo(-12, 6);
+    ctx.lineTo(-18, 0);
+    ctx.lineTo(-12, -6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  });
+
+  // Ultra-enhanced portal with particles
   let p = lvl.portal;
   ctx.save();
-  let t = performance.now()/200;
-  ctx.translate(p.x*tileSize+20, p.y*tileSize+20);
-  ctx.rotate(t*4);
-  ctx.scale(p.pulse,p.pulse);
-  ctx.strokeStyle="magenta";
-  ctx.lineWidth=3;
-  for(let i=0;i<5;i++){
+  ctx.translate(mazeOffsetX + p.x*tileSize+20, mazeOffsetY + p.y*tileSize+20);
+  
+  if(p.active){
+    // Portal particles
+    p.particles.forEach((particle, i) => {
+      let x = Math.cos(particle.angle) * particle.radius;
+      let y = Math.sin(particle.angle) * particle.radius;
+      let hue = (particle.angle * 180/Math.PI + animationTime * 100) % 360;
+      
+      ctx.save();
+      ctx.globalAlpha = 0.8;
+      ctx.fillStyle = `hsl(${hue}, 100%, 60%)`;
+      ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
+      ctx.shadowBlur = 15;
+      ctx.beginPath();
+      ctx.arc(x, y, 3, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    });
+    
+    // Multiple swirl layers with colors
+    for(let layer=0; layer<5; layer++){
+      ctx.save();
+      ctx.rotate(animationTime*(2+layer*0.3) * (layer%2 ? 1 : -1));
+      ctx.scale(p.pulse * (0.6 + layer*0.15), p.pulse * (0.6 + layer*0.15));
+      
+      let hue = (animationTime * 80 + layer * 72) % 360;
+      ctx.strokeStyle = `hsl(${hue}, 100%, ${70-layer*5}%)`;
+      ctx.lineWidth = 4-layer*0.6;
+      ctx.shadowColor = ctx.strokeStyle;
+      ctx.shadowBlur = 15;
+      
+      for(let i=0; i<8; i++){
+        ctx.beginPath();
+        let radius = 10 + layer*4;
+        let startAngle = (i/8) * Math.PI * 2;
+        let endAngle = startAngle + Math.PI * 1.3;
+        ctx.arc(0, 0, radius, startAngle, endAngle);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+    
+    // Center vortex
+    ctx.save();
+    ctx.scale(p.pulse*0.5, p.pulse*0.5);
+    let centerGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 20);
+    centerGradient.addColorStop(0, 'rgba(255,255,255,0.9)');
+    centerGradient.addColorStop(0.5, 'rgba(255,0,255,0.6)');
+    centerGradient.addColorStop(1, 'rgba(255,0,255,0)');
+    ctx.fillStyle = centerGradient;
     ctx.beginPath();
-    ctx.arc(0,0,5+i*4,0,Math.PI*2*(0.8-i*0.12));
+    ctx.arc(0, 0, 20, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+    
+  } else {
+    // Inactive portal
+    ctx.strokeStyle = "rgba(100,50,100,0.6)";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.arc(0, 0, 15, 0, Math.PI*2);
     ctx.stroke();
+    ctx.setLineDash([]);
   }
   ctx.restore();
 
-  // Enemies
-  ctx.fillStyle="red";
-  lvl.enemies.forEach(e=>ctx.fillRect(e.floatX*tileSize+5,e.floatY*tileSize+5,30,30));
+  // Enhanced enemies with varied colors and glow
+  lvl.enemies.forEach((e,i)=>{
+    let pulse = Math.sin(animationTime*6 + i) * 0.3 + 0.7;
+    
+    ctx.save();
+    ctx.fillStyle = e.color;
+    ctx.shadowColor = e.color;
+    ctx.shadowBlur = 25 * pulse;
+    
+    // Enemy body
+    let enemySize = 28 + pulse * 6;
+    ctx.fillRect(
+      mazeOffsetX + e.floatX*tileSize + (40-enemySize)/2, 
+      mazeOffsetY + e.floatY*tileSize + (40-enemySize)/2, 
+      enemySize, enemySize
+    );
+    
+    // Enemy eyes
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowBlur = 5;
+    ctx.fillRect(mazeOffsetX + e.floatX*tileSize + 8, mazeOffsetY + e.floatY*tileSize + 12, 6, 6);
+    ctx.fillRect(mazeOffsetX + e.floatX*tileSize + 26, mazeOffsetY + e.floatY*tileSize + 12, 6, 6);
+    
+    // Enemy pupils
+    ctx.fillStyle = '#000000';
+    ctx.shadowBlur = 0;
+    ctx.fillRect(mazeOffsetX + e.floatX*tileSize + 10, mazeOffsetY + e.floatY*tileSize + 14, 2, 2);
+    ctx.fillRect(mazeOffsetX + e.floatX*tileSize + 28, mazeOffsetY + e.floatY*tileSize + 14, 2, 2);
+    ctx.restore();
+  });
 
-  // Player
+  // Ultra-enhanced player with rainbow effect
   ctx.save();
-  ctx.translate(player.floatX*tileSize+20, player.floatY*tileSize+20);
+  ctx.translate(mazeOffsetX + player.floatX*tileSize+20, mazeOffsetY + player.floatY*tileSize+20);
   ctx.rotate(player.angle);
-  ctx.scale(player.scale,player.scale);
-  ctx.fillStyle="cyan";
-  ctx.fillRect(-15,-15,30,30);
+  ctx.scale(player.scale, player.scale);
+  
+  let playerGlow = Math.sin(animationTime*4) * 0.3 + 0.7;
+  let playerHue = (animationTime * 120) % 360;
+  
+  // Player outer glow
+  ctx.shadowColor = `hsl(${playerHue}, 100%, 50%)`;
+  ctx.shadowBlur = 30 * playerGlow;
+  
+  // Player body gradient
+  let playerGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 20);
+  playerGradient.addColorStop(0, `hsl(${playerHue}, 100%, 80%)`);
+  playerGradient.addColorStop(0.7, `hsl(${playerHue}, 100%, 60%)`);
+  playerGradient.addColorStop(1, `hsl(${playerHue}, 100%, 40%)`);
+  
+  ctx.fillStyle = playerGradient;
+  ctx.fillRect(-18,-18,36,36);
+  
+  // Player inner core
+  ctx.shadowBlur = 15;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(-10,-10,20,20);
+  
+  // Player center dot
+  ctx.shadowBlur = 5;
+  ctx.fillStyle = `hsl(${(playerHue + 180) % 360}, 100%, 50%)`;
+  ctx.fillRect(-4,-4,8,8);
   ctx.restore();
 
-  // HUD
-  ctx.fillStyle="white";
-  ctx.font="20px Arial";
-  ctx.fillText(`Level: ${currentLevel+1}  Keys: ${keysCollected}  Score: ${score}`,10,20);
+  // Enhanced HUD with colorful styling - positioned at top
+  ctx.shadowBlur = 0;
+  
+  // HUD background
+  let hudGradient = ctx.createLinearGradient(0, 0, canvas.width, 60);
+  hudGradient.addColorStop(0, 'rgba(0,0,0,0.8)');
+  hudGradient.addColorStop(0.5, 'rgba(20,20,40,0.9)');
+  hudGradient.addColorStop(1, 'rgba(0,0,0,0.8)');
+  ctx.fillStyle = hudGradient;
+  ctx.fillRect(0, 0, canvas.width, 70);
+  
+  // Level indicator
+  let levelGradient = ctx.createLinearGradient(0, 0, 200, 0);
+  levelGradient.addColorStop(0, '#00ff88');
+  levelGradient.addColorStop(1, '#0088ff');
+  ctx.fillStyle = levelGradient;
+  ctx.font = "bold 24px Courier New";
+  ctx.fillText(`🌟 LEVEL: ${currentLevel+1}`, 30, 35);
+  
+  // Keys indicator
+  let keysGradient = ctx.createLinearGradient(0, 0, 150, 0);
+  keysGradient.addColorStop(0, '#ffaa00');
+  keysGradient.addColorStop(1, '#ff6600');
+  ctx.fillStyle = keysGradient;
+  ctx.fillText(`🔑 KEYS: ${keysCollected}/3`, 250, 35);
+  
+  // Score indicator
+  let scoreGradient = ctx.createLinearGradient(0, 0, 200, 0);
+  scoreGradient.addColorStop(0, '#ff00ff');
+  scoreGradient.addColorStop(1, '#ff0088');
+  ctx.fillStyle = scoreGradient;
+  ctx.fillText(`💎 SCORE: ${score}`, 450, 35);
+  
+  // Portal status indicator
+  if(keysCollected >= 3){
+    ctx.save();
+    let portalGlow = Math.sin(animationTime*8) * 0.5 + 0.5;
+    ctx.fillStyle = `rgba(255,0,255,${0.7 + portalGlow*0.3})`;
+    ctx.font = "bold 20px Courier New";
+    ctx.shadowColor = '#ff00ff';
+    ctx.shadowBlur = 10;
+    ctx.fillText("🌀 PORTAL ACTIVE! 🌀", 280, 60);
+    ctx.restore();
+  }
 
+  // Game instructions at bottom
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.font = "16px Courier New";
+  ctx.fillText("Use ARROW KEYS to move • Collect all 3 KEYS • Avoid RED enemies", 50, canvas.height - 20);
+
+  // Enhanced messages - positioned in center of maze area
   if(messageTimer>0){
-    ctx.fillText(levelMessage, canvas.width/2 - ctx.measureText(levelMessage).width/2, canvas.height/2);
+    ctx.save();
+    let alpha = Math.min(1, messageTimer/60);
+    let messageHue = (animationTime * 180) % 360;
+    
+    // Message background
+    ctx.fillStyle = `rgba(0,0,0,${alpha * 0.8})`;
+    let textWidth = ctx.measureText(levelMessage).width;
+    ctx.fillRect((canvas.width - textWidth)/2 - 20, canvas.height/2 - 90, textWidth + 40, 60);
+    
+    // Message text
+    ctx.fillStyle = `hsla(${messageHue}, 100%, 80%, ${alpha})`;
+    ctx.font = "bold 28px Courier New";
+    ctx.shadowColor = `hsl(${messageHue}, 100%, 50%)`;
+    ctx.shadowBlur = 15;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
+    
+    ctx.fillText(levelMessage, (canvas.width - textWidth)/2, canvas.height/2 - 60);
+    ctx.restore();
     messageTimer--;
   }
 
+  // Enhanced start screen
   if(!gameStarted){
-    let msg = "Press ENTER to start";
-    ctx.fillText(msg, canvas.width/2 - ctx.measureText(msg).width/2, canvas.height/2);
+    ctx.save();
+    ctx.fillStyle = "rgba(0,0,0,0.85)";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    
+    // Animated title
+    let titleHue = (animationTime * 60) % 360;
+    ctx.fillStyle = `hsl(${titleHue}, 100%, 70%)`;
+    ctx.font = "bold 36px Courier New";
+    ctx.shadowColor = `hsl(${titleHue}, 100%, 50%)`;
+    ctx.shadowBlur = 25;
+    let msg = "✨ PRESS ENTER TO START ✨";
+    let textWidth = ctx.measureText(msg).width;
+    ctx.fillText(msg, (canvas.width - textWidth)/2, canvas.height/2);
+    
+    // Colorful instructions
+    ctx.font = "20px Courier New";
+    let instructions = [
+      "🎮 Use ARROW KEYS to move one square at a time",
+      "🔑 Collect 3 KEYS to activate the portal",
+      "🔴 Avoid enemies - they follow maze paths!",
+      "💎 Collect DIAMONDS for bonus points",
+      "🌀 Enter the PORTAL to advance levels"
+    ];
+    
+    instructions.forEach((instruction, i) => {
+      let instrHue = (titleHue + i * 60) % 360;
+      ctx.fillStyle = `hsl(${instrHue}, 100%, 80%)`;
+      ctx.shadowColor = `hsl(${instrHue}, 100%, 60%)`;
+      ctx.shadowBlur = 10;
+      let instrWidth = ctx.measureText(instruction).width;
+      ctx.fillText(instruction, (canvas.width - instrWidth)/2, canvas.height/2 + 70 + i*30);
+    });
+    ctx.restore();
   }
 
+  // Enhanced game over screen
   if(gameOver){
-    ctx.fillText("Game Over! Press R to restart", canvas.width/2 - ctx.measureText("Game Over! Press R to restart").width/2, canvas.height/2+30);
+    ctx.save();
+    ctx.fillStyle = "rgba(255,0,0,0.9)";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    
+    let gameOverPulse = Math.sin(animationTime*10) * 0.3 + 0.7;
+    ctx.fillStyle = `rgba(255,255,255,${gameOverPulse})`;
+    ctx.font = "bold 42px Courier New";
+    ctx.shadowColor = "#ff0000";
+    ctx.shadowBlur = 25;
+    let msg1 = "💀 GAME OVER 💀";
+    let textWidth1 = ctx.measureText(msg1).width;
+    ctx.fillText(msg1, (canvas.width - textWidth1)/2, canvas.height/2 - 30);
+    
+    ctx.font = "bold 26px Courier New";
+    ctx.shadowBlur = 15;
+    let msg2 = "Press R to restart";
+    let textWidth2 = ctx.measureText(msg2).width;
+    ctx.fillText(msg2, (canvas.width - textWidth2)/2, canvas.height/2 + 40);
+    ctx.restore();
   }
 
+  // Epic victory screen
   if(victory){
-    ctx.fillText("Victory! You escaped the loop!", canvas.width/2 - ctx.measureText("Victory! You escaped the loop!").width/2, canvas.height/2+30);
+    ctx.save();
+    ctx.fillStyle = "rgba(0,255,136,0.95)";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    
+    let victoryGlow = Math.sin(animationTime*6) * 0.4 + 0.6;
+    let victoryHue = (animationTime * 200) % 360;
+    ctx.fillStyle = `hsl(${victoryHue}, 100%, 90%)`;
+    ctx.font = "bold 52px Courier New";
+    ctx.shadowColor = `hsl(${victoryHue}, 100%, 50%)`;
+    ctx.shadowBlur = 35 * victoryGlow;
+    
+    let msg1 = "🎉✨ ULTIMATE VICTORY! ✨🎉";
+    let textWidth1 = ctx.measureText(msg1).width;
+    ctx.fillText(msg1, (canvas.width - textWidth1)/2, canvas.height/2 - 80);
+    
+    ctx.font = "bold 36px Courier New";
+    ctx.shadowBlur = 25;
+    let msg2 = "You escaped all the loops!";
+    let textWidth2 = ctx.measureText(msg2).width;
+    ctx.fillText(msg2, (canvas.width - textWidth2)/2, canvas.height/2 - 20);
+    
+    ctx.font = "bold 28px Courier New";
+    ctx.shadowBlur = 20;
+    let msg3 = `🏆 Final Score: ${score} 🏆`;
+    let textWidth3 = ctx.measureText(msg3).width;
+    ctx.fillText(msg3, (canvas.width - textWidth3)/2, canvas.height/2 + 40);
+    
+    ctx.font = "22px Courier New";
+    ctx.shadowBlur = 15;
+    let msg4 = "Press R to play again";
+    let textWidth4 = ctx.measureText(msg4).width;
+    ctx.fillText(msg4, (canvas.width - textWidth4)/2, canvas.height/2 + 90);
+    ctx.restore();
+  }
+
+  // Enhanced transition effect
+  if(transitioning){
+    ctx.save();
+    let alpha = transitionProgress;
+    let transitionHue = (animationTime * 300) % 360;
+    ctx.fillStyle = `hsla(${transitionHue}, 100%, 50%, ${alpha * 0.8})`;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    
+    // Multi-colored swirling transition
+    ctx.translate(canvas.width/2, canvas.height/2);
+    for(let layer = 0; layer < 3; layer++){
+      ctx.save();
+      ctx.rotate(transitionProgress * Math.PI * 6 * (layer % 2 ? 1 : -1));
+      for(let i=0; i<12; i++){
+        ctx.save();
+        ctx.rotate((i/12) * Math.PI * 2);
+        let layerHue = (transitionHue + i * 30 + layer * 120) % 360;
+        ctx.fillStyle = `hsla(${layerHue}, 100%, 70%, ${(1-transitionProgress) * 0.8})`;
+        ctx.fillRect(-canvas.width/2, -8, canvas.width * transitionProgress, 16);
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+    ctx.restore();
   }
 }
 
 // Game loop
 function loop(){
   if(gameStarted && !gameOver && !victory){
-    movePlayer();
+    updatePlayer();
     moveEnemiesSmooth();
     portalPull();
     handleTransition();
@@ -383,6 +940,7 @@ function loop(){
   requestAnimationFrame(loop);
 }
 
+// Start the game
 loop();
 </script>
 </body>
