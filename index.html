@@ -1,0 +1,893 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Escape The Loop - Ultimate Edition</title>
+  <style>
+    body { 
+      margin:0; 
+      background: linear-gradient(135deg, #0a0a0a, #1a1a2e, #16213e, #0e4b99); 
+      color:white; 
+      text-align:center; 
+      font-family: 'Courier New', monospace;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    canvas { 
+      background: linear-gradient(45deg, #111, #222, #333); 
+      display:block; 
+      border: 6px solid;
+      border-image: linear-gradient(45deg, #00ff88, #0088ff, #ff00ff, #ffaa00, #00ff88) 1;
+      box-shadow: 0 0 50px rgba(0, 255, 136, 0.8), inset 0 0 30px rgba(255, 0, 255, 0.3);
+      border-radius: 20px;
+    }
+    .title {
+      font-size: 36px;
+      background: linear-gradient(45deg, #00ff88, #0088ff, #ff00ff, #ffaa00);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: 0 0 30px rgba(0, 255, 136, 1);
+      margin: 10px 0;
+      font-weight: bold;
+      animation: titleGlow 3s ease-in-out infinite alternate;
+    }
+    @keyframes titleGlow {
+      from { filter: brightness(1) saturate(1); }
+      to { filter: brightness(1.2) saturate(1.5); }
+    }
+    .info {
+      font-size: 16px;
+      color: #ffaa00;
+      margin: 5px 0;
+      text-shadow: 0 0 10px rgba(255, 170, 0, 0.8);
+    }
+    .instructions-panel {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, rgba(26, 26, 46, 0.95), rgba(22, 33, 62, 0.95));
+      border: 3px solid #00ff88;
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 600px;
+      box-shadow: 0 0 40px rgba(0, 255, 136, 0.6);
+      backdrop-filter: blur(10px);
+      z-index: 1000;
+    }
+    .instructions-title {
+      font-size: 28px;
+      color: #00ff88;
+      margin-bottom: 20px;
+      text-shadow: 0 0 20px rgba(0, 255, 136, 1);
+    }
+    .instruction-item {
+      display: flex;
+      align-items: center;
+      margin: 15px 0;
+      font-size: 18px;
+    }
+    .sprite {
+      width: 40px;
+      height: 40px;
+      margin-right: 15px;
+      border: 2px solid #555;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    .continue-btn {
+      background: linear-gradient(45deg, #00ff88, #0088ff);
+      border: none;
+      padding: 15px 30px;
+      font-size: 20px;
+      color: white;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 20px;
+      font-family: 'Courier New', monospace;
+      transition: all 0.3s ease;
+    }
+    .continue-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px rgba(0, 255, 136, 0.8);
+    }
+  </style>
+</head>
+<body>
+<div class="title">🌟 ESCAPE THE LOOP - ULTIMATE EDITION 🌟</div>
+<div class="info">Timer: <span id="timer">0.0</span>s | Score: <span id="score">0</span> | Level: <span id="level">1</span>/10</div>
+<canvas id="gameCanvas" width="950" height="700"></canvas>
+
+<!-- Instructions Panel -->
+<div id="instructionsPanel" class="instructions-panel">
+  <div class="instructions-title">🎮 LEVEL <span id="instructLevel">1</span> BRIEFING 🎮</div>
+  
+  <div class="instruction-item">
+    <div class="sprite" style="background: linear-gradient(45deg, #00ffff, #0088ff); animation: pulse 1s infinite;">👤</div>
+    <div>This is YOU - Use ARROW KEYS to move around the maze</div>
+  </div>
+  
+  <div class="instruction-item">
+    <div class="sprite" style="background: linear-gradient(45deg, #ffaa00, #ff6600); animation: pulse 1.5s infinite;">🔑</div>
+    <div>Collect <span id="keysNeeded">3</span> KEYS to unlock the portal</div>
+  </div>
+  
+  <div class="instruction-item">
+    <div class="sprite" style="background: linear-gradient(45deg, #ff4444, #aa0000); animation: shake 0.5s infinite;">🔴</div>
+    <div>AVOID these enemies - they will catch you!</div>
+  </div>
+  
+  <div class="instruction-item">
+    <div class="sprite" style="background: linear-gradient(45deg, #ff00ff, #8800ff); animation: rotate 2s infinite;">💎</div>
+    <div>Collect DIAMONDS for bonus points!</div>
+  </div>
+  
+  <div class="instruction-item">
+    <div class="sprite" style="background: radial-gradient(circle, #00ff88, #004400); animation: vortex 1s infinite;">🌀</div>
+    <div>Enter the PORTAL when it's activated to advance</div>
+  </div>
+  
+  <div style="margin-top: 25px; font-size: 16px; color: #ffaa00;">
+    ⚡ Speed Bonus: Complete faster for more points!<br>
+    💀 Press R to restart if caught<br>
+    🎯 Goal: Complete all 10 levels!
+  </div>
+  
+  <div style="margin-top: 25px; font-size: 22px; color: #00ff88; text-shadow: 0 0 15px rgba(0, 255, 136, 1); animation: pulse 1.5s infinite;">
+    🎮 PRESS ENTER TO START 🎮
+  </div>
+</div>
+
+<style>
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.8; }
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+@keyframes rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes vortex {
+  0% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.1) rotate(180deg); }
+  100% { transform: scale(1) rotate(360deg); }
+}
+</style>
+
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+const tileSize = 35;
+const mazeWidth = 25;
+const mazeHeight = 18;
+const mazeOffsetX = (canvas.width - mazeWidth * tileSize) / 2;
+const mazeOffsetY = (canvas.height - mazeHeight * tileSize) / 2 + 20;
+
+let gameStarted = false;
+let gameOver = false;
+let victory = false;
+let currentLevel = 0;
+let score = 0;
+let keysCollected = 0;
+let messageTimer = 0;
+let levelMessage = "";
+let transitioning = false;
+let transitionProgress = 0;
+let animationTime = 0;
+let moveDelay = 0;
+let gameTimer = 0;
+let levelStartTime = 0;
+let showInstructions = true;
+const MOVE_COOLDOWN = 6;
+
+// Enhanced player with more properties
+let player = {
+  x:1, y:1, targetX:1, targetY:1, floatX:1, floatY:1, 
+  angle:0, scale:1, moving:false, trail:[]
+};
+
+// Update UI
+function updateUI(){
+  document.getElementById('timer').textContent = (gameTimer / 60).toFixed(1);
+  document.getElementById('score').textContent = score;
+  document.getElementById('level').textContent = (currentLevel + 1);
+}
+
+// Show instructions
+function showLevelInstructions(){
+  showInstructions = true;
+  const panel = document.getElementById('instructionsPanel');
+  const levelSpan = document.getElementById('instructLevel');
+  const keysSpan = document.getElementById('keysNeeded');
+  
+  levelSpan.textContent = currentLevel + 1;
+  keysSpan.textContent = levels[currentLevel].keysRequired;
+  panel.style.display = 'block';
+}
+
+// Controls
+let keysPressed = {};
+document.addEventListener("keydown", e=>{
+  if(showInstructions && e.key === "Enter") {
+    showInstructions = false;
+    document.getElementById('instructionsPanel').style.display = 'none';
+    gameStarted = true;
+    levelStartTime = Date.now();
+    resetLevel();
+    return;
+  }
+  
+  if(!showInstructions && e.key==="Enter" && !gameStarted){ 
+    showLevelInstructions();
+    return;
+  }
+  if(e.key==="r" || e.key==="R"){ 
+    restartGame(); 
+    return;
+  }
+  
+  if(!showInstructions && !keysPressed[e.key] && moveDelay <= 0){
+    keysPressed[e.key] = true;
+    handleMovement(e.key);
+  }
+});
+
+document.addEventListener("keyup", e=>{ 
+  delete keysPressed[e.key]; 
+});
+
+// Handle movement
+function handleMovement(key){
+  if(gameOver || !gameStarted || messageTimer>0 || victory || transitioning || player.moving) return;
+  
+  let dx=0,dy=0;
+  if(key==="ArrowUp") dy=-1;
+  if(key==="ArrowDown") dy=1;
+  if(key==="ArrowLeft") dx=-1;
+  if(key==="ArrowRight") dx=1;
+  
+  if(dx===0 && dy===0) return;
+  
+  let nx=player.x+dx, ny=player.y+dy;
+  let maze = levels[currentLevel].maze;
+  
+  if(maze[ny] && maze[ny][nx]===0){
+    // Add to trail
+    player.trail.push({x: player.floatX, y: player.floatY, life: 15});
+    if(player.trail.length > 8) player.trail.shift();
+    
+    player.x=nx; player.y=ny;
+    player.targetX=nx; player.targetY=ny;
+    player.moving = true;
+    moveDelay = MOVE_COOLDOWN;
+    
+    // Check collectibles
+    let lvl = levels[currentLevel];
+    lvl.keys = lvl.keys.filter(k=>{
+      if(k.x===player.x && k.y===player.y){ 
+        keysCollected++; 
+        score+=150;
+        levelMessage = `🔑 Key ${keysCollected}/${lvl.keysRequired} collected!`;
+        messageTimer = 90;
+        return false;
+      } 
+      return true;
+    });
+    
+    lvl.diamonds = lvl.diamonds.filter(d=>{
+      if(d.x===player.x && d.y===player.y){ 
+        score+=300 + currentLevel * 100;
+        levelMessage = `💎 Diamond! +${300 + currentLevel * 100} points`;
+        messageTimer = 60;
+        return false;
+      } 
+      return true;
+    });
+  }
+}
+
+// Generate maze
+function generateMaze(width, height){
+  let maze = Array(height).fill().map(() => Array(width).fill(1));
+  
+  function carve(x, y){
+    maze[y][x] = 0;
+    let dirs = [[0,2],[2,0],[0,-2],[-2,0]].sort(() => Math.random() - 0.5);
+    
+    for(let [dx, dy] of dirs){
+      let nx = x + dx, ny = y + dy;
+      if(nx > 0 && nx < width-1 && ny > 0 && ny < height-1 && maze[ny][nx] === 1){
+        maze[y + dy/2][x + dx/2] = 0;
+        carve(nx, ny);
+      }
+    }
+  }
+  
+  carve(1, 1);
+  
+  // Ensure more open paths
+  for(let y = 1; y < height-1; y += 2){
+    for(let x = 1; x < width-1; x += 2){
+      if(Math.random() < 0.15){
+        maze[y][x] = 0;
+        if(x > 1 && Math.random() < 0.5) maze[y][x-1] = 0;
+        if(x < width-2 && Math.random() < 0.5) maze[y][x+1] = 0;
+        if(y > 1 && Math.random() < 0.5) maze[y-1][x] = 0;
+        if(y < height-2 && Math.random() < 0.5) maze[y+1][x] = 0;
+      }
+    }
+  }
+  
+  return maze;
+}
+
+// Place items randomly in maze
+function placeItems(maze, count, avoid = []){
+  let items = [];
+  let attempts = 0;
+  
+  while(items.length < count && attempts < 200){
+    let x = Math.floor(Math.random() * (maze[0].length - 2)) + 1;
+    let y = Math.floor(Math.random() * (maze.length - 2)) + 1;
+    
+    if(maze[y][x] === 0 && !avoid.some(pos => pos.x === x && pos.y === y)){
+      let tooClose = items.some(item => Math.abs(item.x - x) + Math.abs(item.y - y) < 3);
+      if(!tooClose){
+        items.push({x, y, pulse: Math.random(), rotation: Math.random() * Math.PI * 2});
+      }
+    }
+    attempts++;
+  }
+  
+  return items;
+}
+
+// Generate 10 increasingly difficult levels
+let levels = [];
+
+function generateLevels(){
+  for(let i = 0; i < 10; i++){
+    let maze = generateMaze(mazeWidth, mazeHeight);
+    let difficulty = i + 1;
+    
+    // Ensure start and end positions are clear
+    maze[1][1] = 0;
+    maze[mazeHeight-2][mazeWidth-2] = 0;
+    
+    let avoid = [{x:1, y:1}, {x:mazeWidth-2, y:mazeHeight-2}];
+    
+    // Progressive difficulty
+    let enemyCount = Math.min(2 + Math.floor(i * 1.2), 12);
+    let keyCount = Math.min(3 + Math.floor(i * 0.5), 7);
+    let diamondCount = Math.min(2 + Math.floor(i * 0.8), 8);
+    
+    let keys = placeItems(maze, keyCount, avoid);
+    let diamonds = placeItems(maze, diamondCount, [...avoid, ...keys]);
+    
+    // Generate enemies with increasing difficulty
+    let enemies = [];
+    for(let j = 0; j < enemyCount; j++){
+      let enemyPos = placeItems(maze, 1, [...avoid, ...keys, ...diamonds, ...enemies]);
+      if(enemyPos.length > 0){
+        let pos = enemyPos[0];
+        enemies.push({
+          x: pos.x, y: pos.y, floatX: pos.x, floatY: pos.y,
+          speed: 0.006 + (i * 0.002) + Math.random() * 0.003,
+          direction: Math.floor(Math.random() * 4),
+          moveTimer: Math.random() * 60,
+          color: `hsl(${Math.random() * 60}, 100%, ${50 + Math.random() * 30}%)`,
+          pathMemory: [], stuck: 0, aggressiveness: Math.min(0.3 + i * 0.1, 0.9)
+        });
+      }
+    }
+    
+    levels.push({
+      maze: maze,
+      enemies: enemies,
+      keys: keys,
+      diamonds: diamonds,
+      keysRequired: keyCount,
+      portal: {x: mazeWidth-2, y: mazeHeight-2, pulse: 1, active: false, particles: []}
+    });
+  }
+}
+
+generateLevels();
+
+// Reset level
+function resetLevel(){
+  let lvl = levels[currentLevel];
+  player.x=1; player.y=1; player.floatX=1; player.floatY=1; 
+  player.targetX=1; player.targetY=1; player.angle=0; player.scale=1; player.moving=false;
+  player.trail = [];
+  keysCollected=0; gameOver=false; victory=false; transitioning=false; transitionProgress=0;
+  moveDelay = 0;
+  
+  // Reset enemies
+  lvl.enemies.forEach(e=>{
+    e.floatX=e.x; e.floatY=e.y; 
+    e.direction = Math.floor(Math.random() * 4);
+    e.moveTimer = Math.random() * 60;
+    e.pathMemory = [];
+    e.stuck = 0;
+  });
+  
+  lvl.portal.active = false;
+  lvl.portal.particles = [];
+  levelMessage = `🌟 Level ${currentLevel+1}: Collect ${lvl.keysRequired} keys! 🌟`;
+  messageTimer = 120;
+}
+
+// Restart game
+function restartGame(){
+  currentLevel = 0; score = 0; victory = false; gameStarted = false;
+  gameOver = false; transitionProgress = 0; animationTime = 0; gameTimer = 0;
+  player.x=1; player.y=1; player.floatX=1; player.floatY=1; 
+  player.targetX=1; player.targetY=1; player.angle=0; player.scale=1; player.moving=false;
+  player.trail = [];
+  levels.forEach(level=>{
+    level.enemies.forEach(e=>{ 
+      e.floatX=e.x; e.floatY=e.y; e.direction=Math.floor(Math.random()*4);
+      e.pathMemory = []; e.stuck = 0;
+    });
+    level.portal.active = false;
+    level.portal.particles = [];
+  });
+  keysCollected=0; messageTimer=0; levelMessage=""; moveDelay = 0;
+  showLevelInstructions();
+}
+
+// Update player
+function updatePlayer(){
+  if(player.moving){
+    let dx = player.targetX - player.floatX;
+    let dy = player.targetY - player.floatY;
+    let speed = 0.3;
+    
+    player.floatX += dx * speed;
+    player.floatY += dy * speed;
+    
+    if(Math.abs(dx) < 0.1 && Math.abs(dy) < 0.1){
+      player.floatX = player.targetX;
+      player.floatY = player.targetY;
+      player.moving = false;
+    }
+  }
+  
+  // Update trail
+  player.trail.forEach(t => t.life--);
+  player.trail = player.trail.filter(t => t.life > 0);
+  
+  if(moveDelay > 0) moveDelay--;
+}
+
+// Enhanced enemy AI
+function moveEnemiesSmartAI(){
+  let lvl = levels[currentLevel];
+  let maze = lvl.maze;
+  
+  lvl.enemies.forEach(e=>{
+    e.moveTimer++;
+    
+    // Enhanced AI with aggression based on level
+    let currentPos = `${Math.floor(e.floatX)},${Math.floor(e.floatY)}`;
+    if(!e.pathMemory.includes(currentPos)){
+      e.pathMemory.push(currentPos);
+      if(e.pathMemory.length > 6) e.pathMemory.shift();
+    }
+    
+    if(e.moveTimer > 60 - currentLevel * 3){
+      let validDirections = [];
+      let directions = [{x:0,y:-1}, {x:1,y:0}, {x:0,y:1}, {x:-1,y:0}];
+      
+      directions.forEach((dir, index) => {
+        let checkX = Math.floor(e.floatX + dir.x);
+        let checkY = Math.floor(e.floatY + dir.y);
+        
+        if(maze[checkY] && maze[checkY][checkX] === 0){
+          let playerDist = Math.abs(checkX - player.x) + Math.abs(checkY - player.y);
+          let penalty = e.pathMemory.includes(`${checkX},${checkY}`) ? 8 : 0;
+          
+          validDirections.push({
+            index: index,
+            score: playerDist - penalty * (1 - e.aggressiveness)
+          });
+        }
+      });
+      
+      if(validDirections.length > 0){
+        validDirections.sort((a, b) => a.score - b.score);
+        
+        // Higher aggression = more likely to pursue player directly
+        if(Math.random() < e.aggressiveness){
+          e.direction = validDirections[0].index;
+        } else {
+          e.direction = validDirections[Math.floor(Math.random() * validDirections.length)].index;
+        }
+      }
+      e.moveTimer = 0;
+    }
+    
+    // Move
+    let directions = [{x:0,y:-1}, {x:1,y:0}, {x:0,y:1}, {x:-1,y:0}];
+    let dir = directions[e.direction];
+    let nextX = e.floatX + dir.x * e.speed;
+    let nextY = e.floatY + dir.y * e.speed;
+    
+    if(maze[Math.floor(nextY)] && maze[Math.floor(nextY)][Math.floor(nextX)] === 0){
+      e.floatX = nextX;
+      e.floatY = nextY;
+    } else {
+      e.moveTimer = 80;
+    }
+    
+    e.x = Math.round(e.floatX);
+    e.y = Math.round(e.floatY);
+    
+    // Collision detection
+    if(Math.abs(e.floatX - player.floatX) < 0.6 && Math.abs(e.floatY - player.floatY) < 0.6){
+      gameOver = true;
+      levelMessage = "💀 CAUGHT! Press R to restart 💀";
+      messageTimer = 300;
+    }
+  });
+}
+
+// Portal mechanics
+function portalPull(){
+  if(transitioning) return;
+  let lvl = levels[currentLevel];
+  let p = lvl.portal;
+  
+  if(keysCollected >= lvl.keysRequired && !p.active){
+    p.active = true;
+    levelMessage = "🌀 PORTAL ACTIVATED! Enter to proceed! 🌀";
+    messageTimer = 120;
+    
+    // Initialize particles
+    for(let i = 0; i < 30; i++){
+      p.particles.push({
+        angle: (i / 30) * Math.PI * 2,
+        radius: 40 + Math.random() * 25,
+        speed: 0.03 + Math.random() * 0.02,
+        life: 1,
+        color: `hsl(${(i * 12) % 360}, 100%, 60%)`
+      });
+    }
+  }
+  
+  if(!p.active) return;
+  
+  // Update particles
+  p.particles.forEach(particle => {
+    particle.angle += particle.speed;
+    particle.radius *= 0.992;
+    if(particle.radius < 8) particle.radius = 60;
+  });
+  
+  let dx = (p.x+0.5) - player.floatX;
+  let dy = (p.y+0.5) - player.floatY;
+  let dist = Math.sqrt(dx*dx + dy*dy);
+  
+  if(dist < 4){
+    let pull = 0.015 + (4 - dist) * 0.02;
+    player.floatX += dx * pull;
+    player.floatY += dy * pull;
+    player.targetX = player.floatX;
+    player.targetY = player.floatY;
+    player.x = Math.round(player.floatX);
+    player.y = Math.round(player.floatY);
+    player.angle += 0.1 + (4 - dist) * 0.15;
+    player.scale = Math.max(0.2, dist / 4);
+    
+    if(dist < 0.3){
+      transitioning = true;
+      transitionProgress = 0;
+    }
+  } else {
+    player.angle *= 0.9;
+    player.scale = Math.min(1, player.scale + 0.08);
+  }
+}
+
+// Handle transition with time bonus
+function handleTransition(){
+  if(!transitioning) return;
+  transitionProgress += 0.03;
+  
+  if(transitionProgress>=1){
+    transitioning = false;
+    
+    // Calculate time bonus
+    let levelTime = (Date.now() - levelStartTime) / 1000;
+    let timeBonus = Math.max(0, Math.floor((60 - levelTime) * 50));
+    score += 1000 + timeBonus;
+    
+    currentLevel++;
+    if(currentLevel >= levels.length){
+      victory=true;
+      levelMessage=`🎉✨ ULTIMATE VICTORY! Final Score: ${score} ✨🎉`;
+      messageTimer=600;
+    } else {
+      gameStarted = false;
+      showLevelInstructions();
+    }
+  }
+}
+
+// Enhanced drawing
+function draw(){
+  if(showInstructions) return;
+  
+  animationTime += 0.03;
+  if(gameStarted && !gameOver && !victory) gameTimer++;
+  
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  
+  let maze = levels[currentLevel].maze;
+  let lvl = levels[currentLevel];
+
+  // Draw maze floor
+  for(let y=0;y<maze.length;y++){
+    for(let x=0;x<maze[y].length;x++){
+      if(maze[y][x]===0){
+        let floorGradient = ctx.createRadialGradient(
+          mazeOffsetX + x*tileSize + tileSize/2, mazeOffsetY + y*tileSize + tileSize/2, 0,
+          mazeOffsetX + x*tileSize + tileSize/2, mazeOffsetY + y*tileSize + tileSize/2, tileSize/2
+        );
+        floorGradient.addColorStop(0, '#2a2a4e');
+        floorGradient.addColorStop(1, '#1a1a2e');
+        
+        ctx.fillStyle = floorGradient;
+        ctx.fillRect(mazeOffsetX + x*tileSize, mazeOffsetY + y*tileSize, tileSize, tileSize);
+      }
+    }
+  }
+
+  // Draw maze walls
+  for(let y=0;y<maze.length;y++){
+    for(let x=0;x<maze[y].length;x++){
+      if(maze[y][x]===1){
+        let wallGradient = ctx.createLinearGradient(
+          mazeOffsetX + x*tileSize, mazeOffsetY + y*tileSize,
+          mazeOffsetX + x*tileSize + tileSize, mazeOffsetY + y*tileSize + tileSize
+        );
+        wallGradient.addColorStop(0, `hsl(${220 + currentLevel * 10}, 40%, 35%)`);
+        wallGradient.addColorStop(0.5, `hsl(${220 + currentLevel * 10}, 50%, 45%)`);
+        wallGradient.addColorStop(1, `hsl(${220 + currentLevel * 10}, 35%, 25%)`);
+        
+        ctx.fillStyle = wallGradient;
+        ctx.fillRect(mazeOffsetX + x*tileSize, mazeOffsetY + y*tileSize, tileSize, tileSize);
+        
+        ctx.strokeStyle = `hsl(${220 + currentLevel * 10}, 60%, 55%)`;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(mazeOffsetX + x*tileSize, mazeOffsetY + y*tileSize, tileSize, tileSize);
+      }
+    }
+  }
+
+  // Player trail
+  player.trail.forEach(t => {
+    let alpha = t.life / 15;
+    ctx.save();
+    ctx.globalAlpha = alpha * 0.8;
+    ctx.fillStyle = '#00ffff';
+    ctx.shadowColor = '#00ffff';
+    ctx.shadowBlur = 8;
+    ctx.fillRect(mazeOffsetX + t.x*tileSize+15, mazeOffsetY + t.y*tileSize+15, 6, 6);
+    ctx.restore();
+  });
+
+  // Enhanced keys
+  lvl.keys.forEach(k => {
+    k.pulse += 0.08;
+    let size = 20 + Math.sin(k.pulse) * 4;
+    let x = mazeOffsetX + k.x*tileSize + tileSize/2;
+    let y = mazeOffsetY + k.y*tileSize + tileSize/2;
+    
+    ctx.save();
+    ctx.shadowColor = '#ffaa00';
+    ctx.shadowBlur = 15;
+    ctx.fillStyle = `hsl(45, 100%, ${70 + Math.sin(k.pulse) * 10}%)`;
+    ctx.font = `${size}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.fillText('🔑', x, y + 5);
+    ctx.restore();
+  });
+
+  // Enhanced diamonds
+  lvl.diamonds.forEach(d => {
+    d.rotation += 0.05;
+    let size = 18 + Math.sin(animationTime + d.rotation) * 3;
+    let x = mazeOffsetX + d.x*tileSize + tileSize/2;
+    let y = mazeOffsetY + d.y*tileSize + tileSize/2;
+    
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(d.rotation);
+    ctx.shadowColor = '#ff00ff';
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = `hsl(${280 + Math.sin(animationTime) * 30}, 100%, ${60 + Math.sin(d.rotation) * 20}%)`;
+    ctx.font = `${size}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.fillText('💎', 0, 5);
+    ctx.restore();
+  });
+
+  // Enhanced enemies
+  lvl.enemies.forEach(e => {
+    let x = mazeOffsetX + e.floatX*tileSize + tileSize/2;
+    let y = mazeOffsetY + e.floatY*tileSize + tileSize/2;
+    let wobble = Math.sin(animationTime * 3 + e.x + e.y) * 2;
+    
+    ctx.save();
+    ctx.translate(x + wobble, y);
+    ctx.shadowColor = e.color;
+    ctx.shadowBlur = 15;
+    
+    // Enemy body
+    ctx.fillStyle = e.color;
+    ctx.beginPath();
+    ctx.arc(0, 0, 12, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Glowing effect
+    ctx.globalAlpha = 0.6;
+    ctx.beginPath();
+    ctx.arc(0, 0, 18, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+
+  // Enhanced portal
+  let p = lvl.portal;
+  if(p.active){
+    let x = mazeOffsetX + p.x*tileSize + tileSize/2;
+    let y = mazeOffsetY + p.y*tileSize + tileSize/2;
+    
+    // Draw swirling particles
+    ctx.save();
+    p.particles.forEach(particle => {
+      let px = x + Math.cos(particle.angle) * particle.radius;
+      let py = y + Math.sin(particle.angle) * particle.radius;
+      
+      ctx.fillStyle = particle.color || '#00ff88';
+      ctx.shadowColor = particle.color || '#00ff88';
+      ctx.shadowBlur = 8;
+      ctx.globalAlpha = 0.8;
+      ctx.beginPath();
+      ctx.arc(px, py, 3, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.restore();
+    
+    // Portal center
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(animationTime);
+    ctx.shadowColor = '#00ff88';
+    ctx.shadowBlur = 25;
+    ctx.fillStyle = `hsl(150, 100%, ${50 + Math.sin(animationTime * 2) * 20}%)`;
+    ctx.font = '28px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('🌀', 0, 8);
+    ctx.restore();
+  }
+
+  // Enhanced player
+  let px = mazeOffsetX + player.floatX*tileSize + tileSize/2;
+  let py = mazeOffsetY + player.floatY*tileSize + tileSize/2;
+  
+  ctx.save();
+  ctx.translate(px, py);
+  ctx.rotate(player.angle);
+  ctx.scale(player.scale, player.scale);
+  
+  // Player glow
+  ctx.shadowColor = '#00ffff';
+  ctx.shadowBlur = 20;
+  ctx.fillStyle = `hsl(180, 100%, ${70 + Math.sin(animationTime * 2) * 15}%)`;
+  
+  // Player body
+  ctx.beginPath();
+  ctx.arc(0, 0, 14, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Player emoji
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'white';
+  ctx.font = '18px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('👤', 0, 5);
+  ctx.restore();
+
+  // Messages and UI
+  if(messageTimer > 0){
+    messageTimer--;
+    ctx.save();
+    ctx.fillStyle = `rgba(0, 0, 0, 0.8)`;
+    ctx.fillRect(0, 10, canvas.width, 60);
+    
+    ctx.fillStyle = '#00ff88';
+    ctx.font = '24px Courier New';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = '#00ff88';
+    ctx.shadowBlur = 10;
+    ctx.fillText(levelMessage, canvas.width/2, 45);
+    ctx.restore();
+  }
+
+  // Game over or victory screen
+  if(gameOver || victory){
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    ctx.fillStyle = gameOver ? '#ff4444' : '#00ff88';
+    ctx.font = 'bold 36px Courier New';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = gameOver ? '#ff4444' : '#00ff88';
+    ctx.shadowBlur = 20;
+    
+    if(gameOver){
+      ctx.fillText('💀 GAME OVER 💀', canvas.width/2, canvas.height/2 - 40);
+      ctx.font = '20px Courier New';
+      ctx.fillText('Press R to restart', canvas.width/2, canvas.height/2 + 20);
+    } else {
+      ctx.fillText(levelMessage, canvas.width/2, canvas.height/2 - 40);
+      ctx.font = '20px Courier New';
+      ctx.fillText('Press R to play again', canvas.width/2, canvas.height/2 + 20);
+    }
+    ctx.restore();
+  }
+
+  // Transition effect
+  if(transitioning){
+    ctx.save();
+    ctx.fillStyle = `rgba(255, 255, 255, ${transitionProgress * 0.8})`;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Swirling transition effect
+    ctx.translate(canvas.width/2, canvas.height/2);
+    ctx.rotate(transitionProgress * Math.PI * 4);
+    ctx.fillStyle = `rgba(0, 255, 136, ${1 - transitionProgress})`;
+    for(let i = 0; i < 8; i++){
+      ctx.rotate(Math.PI / 4);
+      ctx.fillRect(-5, -200 * transitionProgress, 10, 100);
+    }
+    ctx.restore();
+  }
+  
+  updateUI();
+}
+
+// Game loop
+function gameLoop(){
+  if(!showInstructions){
+    updatePlayer();
+    if(gameStarted && !gameOver && !victory){
+      moveEnemiesSmartAI();
+      portalPull();
+      handleTransition();
+    }
+    draw();
+  }
+  requestAnimationFrame(gameLoop);
+}
+
+// Start the game
+document.getElementById('instructionsPanel').style.display = 'block';
+gameLoop();
