@@ -1,144 +1,254 @@
-<title>Escape The Loop – Ultimate Edition
-body {
-margin: 0;
-background: linear-gradient(135deg, #0a0a0a, #1a1a2e, #16213e);
-color: white;
-text-align: center;
-font-family: 'Courier New', monospace;
-overflow: hidden;
+let maze = [];
+let player;
+let enemies = [];
+let keys = [];
+let diamonds = [];
+let portal;
+let score = 0;
+let level = 1;
+let maxLevels = 10;
+let showInstructions = true;
+let levelStartTime;
+let levelTimer = 0;
+let gameOver = false;
+
+function setup() {
+  createCanvas(600, 600);
+  textAlign(CENTER, CENTER);
+  textSize(16);
+  initializeLevel(level);
 }
-canvas {
-background: linear-gradient(45deg, #111, #222, #333);
-display: block;
-margin: 10px auto;
-border: 5px solid #00ff88;
-box-shadow: 0 0 40px rgba(0, 255, 136, 0.6),
-inset 0 0 20px rgba(255, 0, 255, 0.2);
-border-radius: 15px;
-max-width: 90vw;
-max-height: 85vh;
+
+function draw() {
+  background(30);
+
+  if (gameOver) {
+    fill(255);
+    textSize(24);
+    text("🎉 You Escaped All Mazes!", width / 2, height / 2 - 40);
+    textSize(16);
+    text(`Final Score: ${score}`, width / 2, height / 2);
+    return;
+  }
+
+  if (showInstructions) {
+    fill(255);
+    textSize(24);
+    text("Maze Escape", width / 2, 60);
+    textSize(16);
+    text("Collect 3 keys to unlock the portal.\nAvoid enemies. Grab diamonds for bonus points.\nUse arrow keys to move.", width / 2, 120);
+    text("🔑 Key   💎 Diamond   👾 Enemy   🌀 Portal", width / 2, 180);
+    text("Press ENTER to begin", width / 2, 240);
+    return;
+  }
+
+  levelTimer = Math.floor((millis() - levelStartTime) / 1000);
+  fill(255);
+  text(`Level: ${level}`, 50, 20);
+  text(`Score: ${score}`, 150, 20);
+  text(`Time: ${levelTimer}s`, 250, 20);
+
+  drawMaze();
+  player.update();
+  player.draw();
+
+  for (let enemy of enemies) {
+    enemy.update(player);
+    enemy.draw();
+    if (enemy.collidesWith(player)) {
+      resetGame();
+      return;
+    }
+  }
+
+  for (let key of keys) {
+    key.draw();
+    if (!key.collected && player.collidesWith(key)) {
+      key.collected = true;
+    }
+  }
+
+  for (let diamond of diamonds) {
+    diamond.draw();
+    if (!diamond.collected && player.collidesWith(diamond)) {
+      diamond.collected = true;
+      score += 100;
+    }
+  }
+
+  if (keys.every(k => k.collected)) {
+    portal.active = true;
+  }
+
+  portal.draw();
+  if (portal.active && player.collidesWith(portal)) {
+    nextLevel();
+  }
 }
-.title {
-font-size: 32px;
-color: #00ff88;
-text-shadow: 0 0 25px rgba(0, 255, 136, 1),
-0 0 50px rgba(255, 0, 255, 0.5);
-margin: 10px 0;
-font-weight: bold;
+
+function keyPressed() {
+  if (showInstructions && keyCode === ENTER) {
+    showInstructions = false;
+    levelStartTime = millis();
+    return;
+  }
+  player.handleInput(keyCode);
 }
-.instructions {
-font-size: 18px;
-color: #ffaa00;
-margin: 5px 0;
-text-shadow: 0 0 10px rgba(255, 170, 0, 0.8);
+
+function initializeLevel(lvl) {
+  maze = generateMaze(lvl);
+  player = new Player(1, 1);
+  enemies = generateEnemies(lvl);
+  keys = generateKeys();
+  diamonds = generateDiamonds(lvl);
+  portal = new Portal(maze.width - 2, maze.height - 2);
+  levelStartTime = millis();
 }
-</style>
-✨ ESCAPE THE LOOP ✨
-🔑 Use ARROW KEYS to move • Collect 3 KEYS to activate portal • Avoid enemies 🔴
-// --- CONSTANTS & GLOBALS ---
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
-const tileSize = 45;
-const mazeOffsetX = 40;
-const mazeOffsetY = 80;
-const MOVE_COOLDOWN = 8;
-let gameStarted = false,
-gameOver = false,
-victory = false,
-currentLevel = 0,
-score = 0,
-keysCollected = 0,
-messageTimer = 0,
-levelMessage = "",
-transitioning = false,
-transitionProgress = 0,
-animationTime = 0,
-moveDelay = 0;
-// --- PLAYER STATE ---
-let player = {
-x: 1, y: 1,
-targetX: 1, targetY: 1,
-floatX: 1, floatY: 1,
-angle: 0, scale: 1,
-moving: false,
-trail: []
-};
-// --- INPUT HANDLING ---
-let keysPressed = {};
-document.addEventListener("keydown", e => {
-if (!gameStarted && e.key === "Enter") {
-gameStarted = true;
-resetLevel();
-return;
+
+function nextLevel() {
+  let timeBonus = Math.max(0, 1000 - levelTimer * 10);
+  score += timeBonus;
+
+  level++;
+  if (level > maxLevels) {
+    gameOver = true;
+  } else {
+    showInstructions = true;
+    initializeLevel(level);
+  }
 }
-if (e.key === "r" || e.key === "R") {
-restartGame();
-return;
+
+function resetGame() {
+  score = 0;
+  level = 1;
+  showInstructions = true;
+  initializeLevel(level);
 }
-if (!keysPressed[e.key] && moveDelay <= 0) {
-keysPressed[e.key] = true;
-handleMovement(e.key);
+
+// --- Entity Classes ---
+
+class Player {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+  update() {}
+  draw() {
+    fill(0, 255, 0);
+    ellipse(this.x * 30, this.y * 30, 20);
+  }
+  handleInput(key) {
+    if (keyCode === LEFT_ARROW) this.x--;
+    if (keyCode === RIGHT_ARROW) this.x++;
+    if (keyCode === UP_ARROW) this.y--;
+    if (keyCode === DOWN_ARROW) this.y++;
+  }
+  collidesWith(obj) {
+    return dist(this.x, this.y, obj.x, obj.y) < 1;
+  }
 }
-});
-document.addEventListener("keyup", e => {
-delete keysPressed[e.key];
-});
-// --- DIRECTION VECTORS ---
-const ENEMY_DIRS = [
-{ x: 0, y: -1 }, { x: 1, y: 0 }, { x: 0, y: 1 }, { x: -1, y: 0 }
-];
-// --- LEVEL DEFINITIONS (1–10) ---
-let levels = [
-// Level 1
-{
-maze: [
-[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-[1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-[1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1],
-[1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1],
-[1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1],
-[1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1],
-[1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1],
-[1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-[1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1],
-[1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
-[1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1],
-[1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-[1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
-[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-],
-enemies: [
-{ x: 5, y: 5, floatX: 5, floatY: 5, speed: 0.015, direction: 0, moveTimer: 0, color: '#ff4444' },
-{ x: 10, y: 9, floatX: 10, floatY: 9, speed: 0.012, direction: 1, moveTimer: 0, color: '#ff6666' },
-{ x: 3, y: 11, floatX: 3, floatY: 11, speed: 0.018, direction: 2, moveTimer: 0, color: '#ff8888' }
-],
-keys: [
-{ x: 13, y: 1, pulse: 0 },
-{ x: 1, y: 13, pulse: 0.5 },
-{ x: 13, y: 13, pulse: 1 }
-],
-diamonds: [
-{ x: 8, y: 7, rotation: 0 }
-],
-portal: { x: 14, y: 13, pulse: 1, active: false, particles: [] }
-},
-// Level definitions for subsequent levels can be copied here as needed.
-// Level 2 to 10 copied as necessary from Level 1
-JSON.parse(JSON.stringify(levels[0])),
-JSON.parse(JSON.stringify(levels[0])),
-JSON.parse(JSON.stringify(levels[0])),
-JSON.parse(JSON.stringify(levels[0])),
-JSON.parse(JSON.stringify(levels[0])),
-];
-// Function definitions for resetLevel, restartGame, and handleMovement will be required after.
-function resetLevel() {
-// Code to reset the current level
+
+class Enemy {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+  update(player) {
+    if (player.x > this.x) this.x += 0.05;
+    if (player.x < this.x) this.x -= 0.05;
+    if (player.y > this.y) this.y += 0.05;
+    if (player.y < this.y) this.y -= 0.05;
+  }
+  draw() {
+    fill(255, 0, 0);
+    rect(this.x * 30, this.y * 30, 20, 20);
+  }
+  collidesWith(player) {
+    return dist(this.x, this.y, player.x, player.y) < 1;
+  }
 }
-function restartGame() {
-// Code to restart the game
+
+class Key {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.collected = false;
+  }
+  draw() {
+    if (!this.collected) {
+      fill(255, 255, 0);
+      ellipse(this.x * 30, this.y * 30, 15);
+    }
+  }
 }
-function handleMovement(key) {
-// Code to handle player movement based on key pressed
+
+class Diamond {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.collected = false;
+  }
+  draw() {
+    if (!this.collected) {
+      fill(0, 255, 255);
+      rect(this.x * 30, this.y * 30, 10, 10);
+    }
+  }
 }
-</script>
+
+class Portal {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.active = false;
+  }
+  draw() {
+    if (this.active) {
+      fill(200, 0, 255);
+      ellipse(this.x * 30, this.y * 30, 25);
+    }
+  }
+}
+
+// --- Generation Functions ---
+
+function generateMaze(level) {
+  return {
+    width: 20 + level,
+    height: 20 + level,
+    tiles: [] // Add your maze generation logic here
+  };
+}
+
+function generateEnemies(level) {
+  let list = [];
+  for (let i = 0; i < 2 + level; i++) {
+    list.push(new Enemy(random(5, 15), random(5, 15)));
+  }
+  return list;
+}
+
+function generateKeys() {
+  return [
+    new Key(3, 3),
+    new Key(5, 10),
+    new Key(10, 5)
+  ];
+}
+
+function generateDiamonds(level) {
+  let list = [];
+  for (let i = 0; i < 3 + level; i++) {
+    list.push(new Diamond(random(2, 18), random(2, 18)));
+  }
+  return list;
+}
+
+function drawMaze() {
+  stroke(100);
+  for (let i = 0; i < 20; i++) {
+    for (let j = 0; j < 20; j++) {
+      noFill();
+      rect(i * 30, j * 30, 30, 30);
+    }
+  }
