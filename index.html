@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -83,21 +82,30 @@
       justify-content: center;
       font-size: 24px;
     }
-    .continue-btn {
-      background: linear-gradient(45deg, #00ff88, #0088ff);
-      border: none;
-      padding: 15px 30px;
-      font-size: 20px;
-      color: white;
-      border-radius: 10px;
-      cursor: pointer;
-      margin-top: 20px;
-      font-family: 'Courier New', monospace;
-      transition: all 0.3s ease;
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.8; }
     }
-    .continue-btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 20px rgba(0, 255, 136, 0.8);
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-2px); }
+      75% { transform: translateX(2px); }
+    }
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes vortex {
+      0% { transform: scale(1) rotate(0deg); }
+      50% { transform: scale(1.1) rotate(180deg); }
+      100% { transform: scale(1) rotate(360deg); }
+    }
+    .enter-prompt {
+      font-size: 24px;
+      color: #00ff88;
+      margin-top: 25px;
+      text-shadow: 0 0 15px rgba(0, 255, 136, 1);
+      animation: pulse 1.5s infinite;
     }
   </style>
 </head>
@@ -141,31 +149,10 @@
     🎯 Goal: Complete all 10 levels!
   </div>
   
-  <div style="margin-top: 25px; font-size: 22px; color: #00ff88; text-shadow: 0 0 15px rgba(0, 255, 136, 1); animation: pulse 1.5s infinite;">
+  <div class="enter-prompt">
     🎮 PRESS ENTER TO START 🎮
   </div>
 </div>
-
-<style>
-@keyframes pulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.1); opacity: 0.8; }
-}
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-2px); }
-  75% { transform: translateX(2px); }
-}
-@keyframes rotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-@keyframes vortex {
-  0% { transform: scale(1) rotate(0deg); }
-  50% { transform: scale(1.1) rotate(180deg); }
-  100% { transform: scale(1) rotate(360deg); }
-}
-</style>
 
 <script>
 const canvas = document.getElementById("gameCanvas");
@@ -218,35 +205,35 @@ function showLevelInstructions(){
   panel.style.display = 'block';
 }
 
-// Controls
-let keysPressed = {};
-document.addEventListener("keydown", e=>{
-  if(showInstructions && e.key === "Enter") {
-    showInstructions = false;
-    document.getElementById('instructionsPanel').style.display = 'none';
-    gameStarted = true;
-    levelStartTime = Date.now();
-    resetLevel();
+// Start level function
+function startLevel(){
+  showInstructions = false;
+  document.getElementById('instructionsPanel').style.display = 'none';
+  gameStarted = true;
+  levelStartTime = Date.now();
+  resetLevel();
+}
+
+// Simple key handler - focusing only on Enter key for starting
+document.addEventListener("keydown", function(e){
+  // Handle Enter key for starting the game
+  if(e.key === "Enter") {
+    if(showInstructions) {
+      startLevel();
+      return;
+    }
+  }
+  
+  // Handle restart
+  if(e.key === "r" || e.key === "R") {
+    restartGame();
     return;
   }
   
-  if(!showInstructions && e.key==="Enter" && !gameStarted){ 
-    showLevelInstructions();
-    return;
-  }
-  if(e.key==="r" || e.key==="R"){ 
-    restartGame(); 
-    return;
-  }
-  
-  if(!showInstructions && !keysPressed[e.key] && moveDelay <= 0){
-    keysPressed[e.key] = true;
+  // Handle movement only when game is active
+  if(gameStarted && !gameOver && !victory && !showInstructions && moveDelay <= 0) {
     handleMovement(e.key);
   }
-});
-
-document.addEventListener("keyup", e=>{ 
-  delete keysPressed[e.key]; 
 });
 
 // Handle movement
