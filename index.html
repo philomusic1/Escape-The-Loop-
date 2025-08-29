@@ -150,7 +150,7 @@
   </div>
   
   <div class="enter-prompt">
-    🎮 PRESS ENTER TO START 🎮
+    🎮 PRESS ENTER, SPACE, OR CLICK TO START 🎮
   </div>
 </div>
 
@@ -216,16 +216,20 @@ function startLevel(){
 
 // Simple key handler - focusing only on Enter key for starting
 document.addEventListener("keydown", function(e){
-  // Handle Enter key for starting the game
-  if(e.key === "Enter") {
+  console.log("Key pressed:", e.key, "Code:", e.code, "showInstructions:", showInstructions);
+  
+  // Handle Enter key for starting the game - try multiple ways to detect Enter
+  if(e.key === "Enter" || e.code === "Enter" || e.keyCode === 13) {
+    console.log("Enter detected!");
     if(showInstructions) {
+      console.log("Starting level...");
       startLevel();
       return;
     }
   }
   
   // Handle restart
-  if(e.key === "r" || e.key === "R") {
+  if(e.key === "r" || e.key === "R" || e.code === "KeyR") {
     restartGame();
     return;
   }
@@ -233,6 +237,24 @@ document.addEventListener("keydown", function(e){
   // Handle movement only when game is active
   if(gameStarted && !gameOver && !victory && !showInstructions && moveDelay <= 0) {
     handleMovement(e.key);
+  }
+// Also add click handler as backup
+document.addEventListener("click", function(e){
+  if(showInstructions) {
+    console.log("Click detected while showing instructions");
+    startLevel();
+  }
+});
+
+// Add space bar as alternative
+document.addEventListener("keydown", function(e){
+  if(e.key === " " || e.code === "Space") {
+    if(showInstructions) {
+      console.log("Space bar detected!");
+      startLevel();
+      e.preventDefault();
+      return;
+    }
   }
 });
 
