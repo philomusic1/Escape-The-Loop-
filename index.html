@@ -187,33 +187,94 @@ let portalY = 18;
 let totalLevels = 5;
 
 function generateSimpleMaze() {
-  // Create simple maze with walls and paths
+  // Create maze filled with walls
   maze = [];
   for (let y = 0; y < mazeHeight; y++) {
     maze[y] = [];
     for (let x = 0; x < mazeWidth; x++) {
-      if (x === 0 || y === 0 || x === mazeWidth-1 || y === mazeHeight-1) {
-        maze[y][x] = 1; // Wall
-      } else if (x % 2 === 1 && y % 2 === 1) {
-        maze[y][x] = 0; // Path
-      } else if (Math.random() < 0.3) {
-        maze[y][x] = 0; // Random paths
-      } else {
-        maze[y][x] = 1; // Wall
+      maze[y][x] = 1; // Start with all walls
+    }
+  }
+  
+  // Recursive backtracking maze generation
+  function carvePath(x, y) {
+    maze[y][x] = 0; // Mark as path
+    
+    // Get random directions
+    let directions = [
+      {dx: 0, dy: -2}, // Up
+      {dx: 2, dy: 0},  // Right
+      {dx: 0, dy: 2},  // Down
+      {dx: -2, dy: 0}  // Left
+    ];
+    
+    // Shuffle directions
+    for (let i = directions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [directions[i], directions[j]] = [directions[j], directions[i]];
+    }
+    
+    // Try each direction
+    for (let dir of directions) {
+      let newX = x + dir.dx;
+      let newY = y + dir.dy;
+      
+      // Check bounds
+      if (newX > 0 && newX < mazeWidth - 1 && newY > 0 && newY < mazeHeight - 1) {
+        // If the cell hasn't been visited
+        if (maze[newY][newX] === 1) {
+          // Carve the wall between
+          maze[y + dir.dy / 2][x + dir.dx / 2] = 0;
+          // Recursively carve from new position
+          carvePath(newX, newY);
+        }
       }
     }
   }
   
-  // Ensure start and end are clear
-  maze[1][1] = 0;
-  maze[portalY][portalX] = 0;
+  // Start carving from position (1,1)
+  carvePath(1, 1);
   
-  // Create path to portal
-  for (let x = 1; x < portalX; x++) {
-    if (Math.random() < 0.7) maze[1][x] = 0;
+  // Ensure start position is clear
+  maze[1][1] = 0;
+  
+  // Ensure portal area is accessible
+  maze[portalY][portalX] = 0;
+  maze[portalY-1][portalX] = 0;
+  maze[portalY][portalX-1] = 0;
+  
+  // Add some extra connections to make maze less linear
+  for (let attempts = 0; attempts < 20; attempts++) {
+    let x = 1 + Math.floor(Math.random() * (mazeWidth - 2));
+    let y = 1 + Math.floor(Math.random() * (mazeHeight - 2));
+    
+    if (maze[y][x] === 1) {
+      // Check if this wall connects two paths
+      let pathCount = 0;
+      if (maze[y-1] && maze[y-1][x] === 0) pathCount++;
+      if (maze[y+1] && maze[y+1][x] === 0) pathCount++;
+      if (maze[y][x-1] === 0) pathCount++;
+      if (maze[y][x+1] === 0) pathCount++;
+      
+      // If it connects paths, randomly remove it
+      if (pathCount >= 2 && Math.random() < 0.3) {
+        maze[y][x] = 0;
+      }
+    }
   }
-  for (let y = 1; y < portalY; y++) {
-    if (Math.random() < 0.7) maze[y][portalX] = 0;
+  
+  // Ensure there's always a path to the portal
+  let pathX = 1, pathY = 1;
+  while (pathX < portalX || pathY < portalY) {
+    maze[pathY][pathX] = 0;
+    
+    if (pathX < portalX && Math.random() < 0.7) {
+      pathX++;
+    } else if (pathY < portalY) {
+      pathY++;
+    } else {
+      pathX++;
+    }
   }
 }
 
